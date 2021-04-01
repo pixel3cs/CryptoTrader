@@ -1,0 +1,12 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="CryptoTrader.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="ApiKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">YeAV2F9eLtFBwhxs8qsPrBOCslBb6K79guk9XmCpxqfdVlKw0GFm84jPBm4eeWfD</Value>
+    </Setting>
+    <Setting Name="SecretKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">MQnmFjx6MByxgvIjZppGWBmvpP2ywmOfeBzU6IcS0kft13fvoKm3H0qff6oDCa0d</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

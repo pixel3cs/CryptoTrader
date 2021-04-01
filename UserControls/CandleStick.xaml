@@ -1,0 +1,12 @@
+﻿<UserControl x:Class="CryptoTrader.UserControls.CandleStick"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CryptoTrader.UserControls"
+             mc:Ignorable="d" d:DesignHeight="100" d:DesignWidth="50">
+    <Grid x:Name="mainGrid">
+        <Rectangle x:Name="line" Width="0.7"/>
+        <Rectangle x:Name="body" VerticalAlignment="Top" />
+    </Grid>
+</UserControl>

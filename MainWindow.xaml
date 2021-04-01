@@ -1,0 +1,111 @@
+﻿<Window x:Class="CryptoTrader.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:CryptoTrader"
+        xmlns:uc="clr-namespace:CryptoTrader.UserControls"
+        Style="{StaticResource ResourceKey=NoResizeBorder}"
+        mc:Ignorable="d" WindowStartupLocation="CenterScreen" Title="Crypto Trader"
+        Height="800" Width="1500" Background="#0B0E11" Icon="Images/icon32.png">
+
+    <Grid x:Name="mainGrid">
+        <TabControl x:Name="tabControl" Background="Transparent" BorderBrush="#323749" BorderThickness="0,1,0,0" Padding="0">
+            <TabItem Header="HOME" Height="25">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.25*"/>
+                        <RowDefinition Height="3"/>
+                        <RowDefinition Height="0.75*"/>
+                        <RowDefinition Height="0"/>
+                    </Grid.RowDefinitions>
+
+                    <GridSplitter Grid.Row="1" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
+
+                    <Grid Grid.Row="0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="3"/>
+                            <ColumnDefinition Width="400"/>
+                            <ColumnDefinition Width="3"/>
+                            <ColumnDefinition Width="500"/>
+                        </Grid.ColumnDefinitions>
+
+                        <GridSplitter Grid.Column="1" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
+                        <GridSplitter Grid.Column="3" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
+
+                        <Grid Grid.Column="0" Margin="7">
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Top">
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                    <TextBlock Text="Used weight: " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                    <TextBlock x:Name="usedWeight" Text="0" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <TextBlock x:Name="simulationProfitTB" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+
+                            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                <TextBlock x:Name="targetMoveTb" Text="Target Move:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
+                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                    <TextBlock Text="Leverage " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                    <uc:NumericUpDown x:Name="leverageTB" Value="20" Interval="1" Symbol="X" Width="70" Height="25" OnValueChangedEvent="leverageTB_OnValueChangedEvent"/>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                    <TextBlock Text="Target ROE " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                    <uc:NumericUpDown x:Name="targetROETb" Value="25" Interval="1" Symbol="%" Width="70" Height="25" OnValueChangedEvent="targetROETb_OnValueChangedEvent"/>
+                                </StackPanel>
+                            </StackPanel>
+
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                <TextBlock x:Name="autoTradeBuyButton" Tag="" Text="Buy" MouseDown="autoTradeButton_MouseDown" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
+                                <TextBlock x:Name="autoTradeWatchButton" Tag="" Text="Watch" MouseDown="autoTradeButton_MouseDown" Margin="5,0,0,0" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <Grid Grid.Column="2">
+                            <TextBlock Text="USDT" Margin="5,0,0,0" Padding="0" VerticalAlignment="Top" HorizontalAlignment="Left" Style="{StaticResource ResourceKey=TBStyle}"/>
+                            <TextBox x:Name="usdtSearch" Text="" FontSize="13" Foreground="#aaa" Height="20" Margin="50,0,100,0" VerticalAlignment="Top" KeyUp="symbolSearch_KeyUp"/>
+                            <ComboBox x:Name="sortByCombo" Width="95" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                <ComboBoxItem Content="24H &#129147;" Tag="1" IsSelected="True"/>
+                                <ComboBoxItem Content="24H &#129145;" Tag="2"/>
+                                <ComboBoxItem Content="Start &#129147;" Tag="3"/>
+                                <ComboBoxItem Content="Start &#129145;" Tag="4"/>
+                            </ComboBox>
+                            <ListView x:Name="usdt" Margin="0,20,0,0" Foreground="Gray" FontSize="16" FontWeight="Bold" SelectionChanged="listBox_SelectionChanged" PreviewKeyDown="listBox_PreviewKeyDown"/>
+                        </Grid>
+
+                        <ListView Grid.Column="4" x:Name="tradeSimulationList" />
+                    </Grid>
+
+                    <Grid Grid.Row="2" x:Name="tradeDataViews">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="0.5*"/>
+                            <RowDefinition Height="3"/>
+                            <RowDefinition Height="0.5*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="0.5*"/>
+                            <ColumnDefinition Width="3"/>
+                            <ColumnDefinition Width="0.5*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <GridSplitter Grid.Row="1" Grid.ColumnSpan="3" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
+                        <GridSplitter Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
+
+                        <uc:TradeDataView Grid.Row="0" Grid.Column="0" ShowTicks="False"/>
+                        <uc:TradeDataView Grid.Row="0" Grid.Column="2" ShowTicks="False"/>
+                        <uc:TradeDataView Grid.Row="2" Grid.Column="0" ShowTicks="False"/>
+                        <uc:TradeDataView Grid.Row="2" Grid.Column="2" x:Name="tradeDataView" ShowTicks="False" TradeSimulationChangedEvent="tradeDataView_TradeSimulationChangedEvent"/>
+                    </Grid>
+                    
+                </Grid>
+            </TabItem>
+            
+        </TabControl>
+        
+        <uc:WindowControlBar x:Name="windowControlBar" Height="25" Width="200" HorizontalAlignment="Right" VerticalAlignment="Top"/>
+    </Grid>
+</Window>
