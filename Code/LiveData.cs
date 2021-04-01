@@ -45,6 +45,7 @@ namespace CryptoTrader.Code
                 case "1h": klineInterval = KlineInterval.OneHour; break;
                 case "2h": klineInterval = KlineInterval.TwoHour; break;
                 case "4h": klineInterval = KlineInterval.FourHour; break;
+                case "12h": klineInterval = KlineInterval.TwelveHour; break;
                 case "1d": klineInterval = KlineInterval.OneDay; break;
                 default: klineInterval = KlineInterval.OneMinute; break;
             }

@@ -9,7 +9,6 @@ namespace CryptoTrader.Code
         public PriceSortType SortType = PriceSortType.PriceDownFromHigh24H;
         public bool Displayed = false;
 
-        public int Index;
         public decimal PriceChange24H;
 
         private decimal PriceMaxSinceWatching = decimal.MinValue, PriceMinSinceWatching = decimal.MaxValue;

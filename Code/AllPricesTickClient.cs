@@ -12,15 +12,9 @@ namespace CryptoTrader.Code
         private static BinanceClient bclient = null;
         private static BinanceSocketClient allPricesSocketClient = null;
         private static Dictionary<string, LivePrice> livePrices = new Dictionary<string, LivePrice>();
-        private static Dictionary<string, TradeHelper> tradeHelpers = new Dictionary<string, TradeHelper>();
 
         public delegate void PricesAvailableDelegate(Dictionary<string, LivePrice>.ValueCollection prices);
         public static event PricesAvailableDelegate PricesAvailableEvent = null;
-
-        public delegate void StartAutoTradeDelegate(TradeHelper tradeHelper);
-        public static event StartAutoTradeDelegate StartAutoTradeEvent = null;
-
-        public static double TrendReversalDown, TrendReversalUp;
 
         public static void StartBroadcastingAllNewPrices()
         {
@@ -44,7 +38,7 @@ namespace CryptoTrader.Code
             MainWindow.UpdateWeightUsage(prices24h.ResponseHeaders);
 
             // process data
-            List<string> ignoreList = new List<string> {  };
+            List<string> ignoreList = new List<string> { };
 
             // get only coins that can be traded on futures and are USDT
             foreach (BinanceFuturesUsdtSymbol symbol in exchangeInfo.Data.Symbols)
@@ -64,10 +58,6 @@ namespace CryptoTrader.Code
                 if (livePrices.ContainsKey(price.Symbol))
                 {
                     livePrices[price.Symbol].SetPrice(price);
-
-                    TradeHelper tradeHelper = new TradeHelper((double)price.LastPrice, (double)price.LastPrice, TrendReversalDown, TrendReversalUp, price.Symbol, Utils.TradingType.LiveSimulation);
-                    tradeHelper.LastTrendIsDown = true;
-                    tradeHelpers.Add(price.Symbol, tradeHelper);
                 }
 
             if (PricesAvailableEvent != null)
@@ -87,32 +77,10 @@ namespace CryptoTrader.Code
                 {
                     livePrices[tick.Symbol].SetPrice(tick);
                     changed = true;
-                    //HandleTradeChange(tick);
                 }
 
             if (changed && PricesAvailableEvent != null)
-            {                
                 PricesAvailableEvent(livePrices.Values);
-            }
-        }
-
-        private static void HandleTradeChange(IBinanceTick tick)
-        {
-            if (tradeHelpers.ContainsKey(tick.Symbol) == false)
-                return;
-
-            TradeHelper tradeHelper = tradeHelpers[tick.Symbol];            
-
-            tradeHelper.CurrentPrice = (double)tick.LastPrice;
-            if (tradeHelper.CurrentPrice < tradeHelper.CurrentMin) tradeHelper.CurrentMin = tradeHelper.CurrentPrice;
-            if (tradeHelper.CurrentPrice > tradeHelper.CurrentMax) tradeHelper.CurrentMax = tradeHelper.CurrentPrice;
-
-            // up > trendReservalUP % => trend reversal
-            if (tradeHelper.LastTrendIsDown && tradeHelper.HasChangedUp())
-            {
-                tradeHelpers.Remove(tick.Symbol);
-                StartAutoTradeEvent(tradeHelper);
-            }
         }
 
     }

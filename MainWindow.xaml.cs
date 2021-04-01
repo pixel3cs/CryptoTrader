@@ -18,18 +18,14 @@ namespace CryptoTrader
         {
             InitializeComponent();
 
-            foreach (UIElement ui in tradeDataViews.Children)
-                if (ui is TradeDataView)
-                {
-                    TradeDataView tdv = ui as TradeDataView;
-                    tdv.SwitchData("BTCUSDT", "1h", Utils.RequestType.DoNotLoad);
-                    tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);
-                }
+            int interval = 0;
+            foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
+            {
+                tdv.SwitchData("BTCUSDT", ViewIntervals[interval++], RequestType.DoNotLoad);
+                tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);
+            }
 
             AllPricesTickClient.PricesAvailableEvent += AllPricesTickClient_PricesAvailableEvent;
-            AllPricesTickClient.StartAutoTradeEvent += AllPricesTickClient_StartAutoTradeEvent;
-            AllPricesTickClient.TrendReversalDown = 0;
-            AllPricesTickClient.TrendReversalUp = 0;
             AllPricesTickClient.StartBroadcastingAllNewPrices();
         }
 
@@ -47,48 +43,16 @@ namespace CryptoTrader
                 if (priceSortType == PriceSortType.PriceUpSinceWatching) orderedPrices = prices.OrderByDescending(p => p.PriceUpSinceWatching); // fastest grow since start
 
                 usdt.Items.Clear();
-                int index = 0;
 
                 foreach (LivePrice price in orderedPrices)
                 {
-                    index = index + 1;
-                    price.Index = index;
                     price.SortType = priceSortType;
                     usdt.Items.Add(price);
                 }
             });
         }
 
-        private void AllPricesTickClient_StartAutoTradeEvent(TradeHelper tradeHelper)
-        {
-            this.Dispatcher.Invoke(() =>
-            {
-                if (tabControl.Items.Count >= 20)
-                    return;
-
-                // select tab if exists
-                foreach (TabItem item in tabControl.Items)
-                    if (item.Header.ToString() == tradeHelper.Symbol)
-                    {
-                        Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = item));
-                        return;
-                    }
-
-                // create new tab
-                TabItem tab = new TabItem();
-                AutoTrade autoTrade = new AutoTrade();
-                autoTrade.SetControlsTradeData(tradeHelper, true, tradeHelper.TrendReversalDown, tradeHelper.TrendReservalUP);
-
-                tab.Header = tradeHelper.Symbol;
-                tab.IsSelected = true;
-                tab.Content = autoTrade;
-                tabControl.Items.Add(tab);
-
-                Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = tab));
-            });
-        }
-
-        private void listBox_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        private void listBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (usdt.SelectedIndex == -1)
                 return;
@@ -98,33 +62,16 @@ namespace CryptoTrader
                 return;
 
             livePrice.Displayed = true;
-            List<string> intervals = new List<string>() { "1d", "2h", "15m", "1m" };
-            
-            foreach (UIElement ui in tradeDataViews.Children)
-                if (ui is TradeDataView)
-                {
-                    TradeDataView tdv = ui as TradeDataView;
-                    tdv.SwitchData(livePrice.Price.Symbol, intervals[0], Code.Utils.RequestType.LoadData);
-                    intervals.RemoveAt(0);
-                }
+            int interval = 0;
+
+            foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
+                tdv.SwitchData(livePrice.Price.Symbol, ViewIntervals[interval++], RequestType.DoNotLoad);
         }
 
         private void listBox_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if(e.Key == System.Windows.Input.Key.Up || e.Key == System.Windows.Input.Key.Down)
-            e.Handled = true;
-        }
-
-        private void symbolSearch_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            foreach (LivePrice livePrice in usdt.Items)
-            {
-                if(livePrice.Symbol.BaseAsset.ToLower().StartsWith(usdtSearch.Text.ToLower()))
-                {
-                    usdt.ScrollIntoView(livePrice);
-                    return;
-                }
-            }
+                e.Handled = true;
         }
 
         private void symbolSearch_KeyUp(object sender, System.Windows.Input.KeyEventArgs e)
@@ -196,17 +143,18 @@ namespace CryptoTrader
             TextBlock autoTradeButton = sender as TextBlock;
             TradeHelper simulation = autoTradeButton.Tag as TradeHelper;
             bool enterWithBuy = (autoTradeButton == autoTradeBuyButton);
+            TabItem tab = null;
 
             // select tab if exists
-            foreach(TabItem item in tabControl.Items)
-                if(item.Header.ToString() == simulation.Symbol)
-                {
-                    Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = item));
-                    return;
-                }
+            tab = tabControl.Items.OfType<TabItem>().FirstOrDefault(t => t.Header.ToString() == simulation.Symbol);
+            if (tab != null)
+            {
+                Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = tab));
+                return;
+            }
 
             // create new tab
-            TabItem tab = new TabItem();
+            tab = new TabItem();
             AutoTrade autoTrade = new AutoTrade();
             autoTrade.SetControlsTradeData(simulation, enterWithBuy, 0, 0);
 
@@ -216,34 +164,6 @@ namespace CryptoTrader
             tabControl.Items.Add(tab);
 
             Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = tab));
-        }
-
-        public static void UpdateWeightUsage(IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders)
-        {
-            string general = string.Empty, for1m = string.Empty;
-            if (responseHeaders != null)
-                foreach (var header in responseHeaders)
-                {
-                    if (header.Key.ToLower() == "x-mbx-used-weight")
-                        general = header.Value.ToList()[0];
-                    if (header.Key.ToLower() == "x-mbx-used-weight-1m")
-                        for1m = header.Value.ToList()[0];
-                }
-
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                MainWindow main = Application.Current.MainWindow as MainWindow;
-                main.usedWeight.Text = string.Format("{0}, {1} / 1m", general, for1m);
-            });
-        }
-
-        protected override void OnClosing(CancelEventArgs e)
-        {
-            foreach (UIElement ui in mainGrid.Children)
-                if (ui is TradeDataView)
-                    (ui as TradeDataView).SafelyClose();
-
-            base.OnClosing(e);
         }
 
         private void leverageTB_OnValueChangedEvent()
@@ -266,13 +186,39 @@ namespace CryptoTrader
 
             if (tradeDataViews != null)
             {
-                foreach (UIElement ui in tradeDataViews.Children)
-                    if (ui is TradeDataView)
-                    {
-                        TradeDataView tdv = ui as TradeDataView;
-                        tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);
-                    }
+                foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
+                    tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);                    
             }
+        }
+
+        public static void UpdateWeightUsage(IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders)
+        {
+            if (responseHeaders == null)
+                return;
+
+            string general = string.Empty, for1m = string.Empty;
+            foreach (var header in responseHeaders)
+            {
+                if (header.Key.ToLower() == "x-mbx-used-weight")
+                    general = header.Value.ToList()[0];
+
+                if (header.Key.ToLower() == "x-mbx-used-weight-1m")
+                    for1m = header.Value.ToList()[0];
+            }
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                MainWindow main = Application.Current.MainWindow as MainWindow;
+                main.usedWeight.Text = string.Format("{0}, {1} / 1m", general, for1m);
+            });
+        }
+
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
+                tdv.SafelyClose();
+
+            base.OnClosing(e);
         }
 
     }

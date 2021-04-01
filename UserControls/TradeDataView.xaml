@@ -31,8 +31,8 @@
 
         <StackPanel x:Name="intervalsPanel" HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
             <TextBlock Text="1d" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="12h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
             <TextBlock Text="4h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="2h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
             <TextBlock Text="1h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
             <TextBlock Text="30m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
             <TextBlock Text="15m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>

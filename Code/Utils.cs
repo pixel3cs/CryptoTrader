@@ -6,11 +6,10 @@ namespace CryptoTrader.Code
 {
     public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData);
     public delegate void LastTickValueDelegate(BinanceStreamAggregatedTrade trade);
-    //public delegate void AllSymbolMiniTickerDelegate(IEnumerable<IBinanceMiniTick> miniTicks);
 
     public class Utils
     {
-        public static List<string> intervals = new List<string>() { "1d", "2h", "15m", "1m" };
+        public static List<string> ViewIntervals = new List<string>() { "1d", "2h", "15m", "1m" };
 
         public enum RequestType
         {

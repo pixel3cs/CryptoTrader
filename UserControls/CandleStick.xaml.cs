@@ -98,34 +98,5 @@ namespace CryptoTrader.UserControls
             return ((priceHeight - lowestLow) * viewHeight) / (highestHigh - lowestLow);
         }
 
-        //// normalize
-        //if (prevsHA.Count > 5)
-        //{
-        //    if (heikinAshi.Up && prevsHA[0].Down && 
-        //        heikinAshi.Open <= Math.Max(prevsHA[0].Open, prevsHA[0].Close) && heikinAshi.Open >= Math.Min(prevsHA[0].Open, prevsHA[0].Close) && 
-        //        heikinAshi.Close <= Math.Max(prevsHA[0].Open, prevsHA[0].Close) && heikinAshi.Close >= Math.Min(prevsHA[0].Open, prevsHA[0].Close))
-        //    {
-        //        decimal temp = heikinAshi.Close;
-        //        heikinAshi.Close = heikinAshi.Open;
-        //        heikinAshi.Open = temp;
-        //        heikinAshi.Modified = true;
-        //    }
-
-        //    if (heikinAshi.Modified == false && heikinAshi.Up && prevsHA[0].Down && prevsHA[1].Down && prevsHA[2].Down)
-        //    {
-        //        decimal maxMax = Math.Max(prevsHA[0].Open, prevsHA[1].Open);
-        //        maxMax = Math.Max(maxMax, prevsHA[2].Open);
-        //        decimal minMin = Math.Min(prevsHA[0].Close, prevsHA[1].Close);
-        //        minMin = Math.Min(minMin, prevsHA[2].Close);
-
-        //        if (heikinAshi.Open <= maxMax && heikinAshi.Open >= minMin && heikinAshi.Close <= maxMax && heikinAshi.Close >= minMin)
-        //        {
-        //            decimal temp = heikinAshi.Close;
-        //            heikinAshi.Close = heikinAshi.Open;
-        //            heikinAshi.Open = temp;
-        //            heikinAshi.Modified = true;
-        //        }
-        //    }
-        //}
     }
 }

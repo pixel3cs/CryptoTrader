@@ -6,6 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Linq;
 using static CryptoTrader.Code.Utils;
 
 namespace CryptoTrader.UserControls
@@ -40,8 +41,6 @@ namespace CryptoTrader.UserControls
         public string Interval { get { return (string)intervalsPanel.Tag; } }
         public string CandleType { get { return (string)candelTypesPanel.Tag; } }
 
-        public double TrendReservalUP { get; private set; }
-        public double TrendReversalDown { get; private set; }
         public double Leverage { get; private set; }
         public double TargetROE { get; private set; }
         
@@ -209,41 +208,45 @@ namespace CryptoTrader.UserControls
                     return;
                 }
 
-                List<CandleStick> klines = new List<CandleStick>();
+                List<CandleStick> klines = new List<CandleStick>(klinesView.Children.Count);
                 CandleStick firstKline = (CandleStick)klinesView.Children[0];
                 CandleStick lastKline = (CandleStick)klinesView.Children[klinesView.Children.Count - 1];
                 double viewWidth = klinesView.ActualWidth;
                 double viewHeight = klinesView.ActualHeight;
                 decimal averageFluctuationPerCandlestick = 0;
+                double reversal = 0;
                 lowestPrice = double.MaxValue;
                 highestPrice = 0;
 
-                for (int r = 0; r < klinesView.Children.Count; r++)
+                // initial calculations
+                foreach (CandleStick candleStick in klinesView.Children.OfType<CandleStick>())
                 {
-                    CandleStick cs = klinesView.Children[r] as CandleStick;
-                    klines.Add(cs);
-                    averageFluctuationPerCandlestick += (cs.OriginalKLine.High / klinesView.Children.Count - cs.OriginalKLine.Low / klinesView.Children.Count);
-                }
+                    klines.Add(candleStick);
 
-                double reversal = (double)(averageFluctuationPerCandlestick / lastKline.OriginalKLine.Close) * 4 * 100;
-                TrendReversalDown = TrendReservalUP = reversal;
-
-                // calculate MarginLeft and Width for candles
-                for (int r = 0; r < klines.Count; r++)
-                {
-                    CandleStick candleStick = klines[r];
                     candleStick.RestoreToOriginal(); // make sure we restore candlestick to original values
-
-                    double xViewLeft = CalculateViewWidth(viewWidth, 0, klines.Count * 1.0d, r + 0.25d);
-                    double xViewRight = CalculateViewWidth(viewWidth, 0, klines.Count * 1.0d, r + 1);
 
                     if (candleStick.Low < lowestPrice) lowestPrice = candleStick.Low;
                     if (candleStick.High > highestPrice) highestPrice = candleStick.High;
 
+                    averageFluctuationPerCandlestick += (candleStick.OriginalKLine.High / klinesView.Children.Count - candleStick.OriginalKLine.Low / klinesView.Children.Count);
+                }
+
+                reversal = (double)(averageFluctuationPerCandlestick / lastKline.OriginalKLine.Close) * 4 * 100;
+
+                // view calculations
+                int index = 0;
+                foreach (CandleStick candleStick in klines)
+                {
+                    double xViewLeft = CalculateViewWidth(viewWidth, 0, klines.Count * 1.0d, index + 0.25d);
+                    double xViewRight = CalculateViewWidth(viewWidth, 0, klines.Count * 1.0d, index + 1);
                     Canvas.SetLeft(candleStick, (double)xViewLeft);
                     candleStick.Width = (double)Math.Abs(xViewRight - xViewLeft);
+
+                    candleStick.CalculateViewPosition(viewHeight, lowestPrice, highestPrice);
+
+                    index++;
                 }
-                
+
                 // calculate Heikin Ashi
                 if (CandleType == "HA")
                 {
@@ -310,7 +313,7 @@ namespace CryptoTrader.UserControls
                 // calculate trends
                 if (CandleType == "AI" && realTimeTrades == null)
                 {
-                    TradeHelper simulation = new TradeHelper(firstKline.Open, lastKline.Close, TrendReversalDown, TrendReservalUP, Symbol, TradingType.CandleStickSimulation);
+                    TradeHelper simulation = new TradeHelper(firstKline.Open, lastKline.Close, reversal, reversal, Symbol, TradingType.CandleStickSimulation);
                     simulation.LastTrendIsDown = true; // always assume we are going down
 
                     foreach (CandleStick candleStick in klines)
@@ -323,7 +326,7 @@ namespace CryptoTrader.UserControls
                         if (simulation.LastTrendIsDown && simulation.HasChangedUp())
                             simulation.Buy(candleStick.OriginalKLine.CloseTime); // buy here
 
-                        // down > trendReversalDown % => trend reversal
+                        // down > reversal % => trend reversal
                         if (simulation.LastTrendIsUp && simulation.HasChangedDown())
                             simulation.Sell(candleStick.OriginalKLine.CloseTime); // sell here
 
@@ -348,15 +351,9 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // calculate MarginHeight and Height for candles
-                foreach (CandleStick candleStick in klines)
-                {
-                    candleStick.CalculateViewPosition(viewHeight, lowestPrice, highestPrice);
-                }
-
                 // calculate price fluctuation parameters
-                trendReversalDownTB.Text = string.Format("{0:0.00} %", TrendReversalDown);
-                trendReversalUpTB.Text = string.Format("{0:0.00} %", TrendReservalUP);
+                trendReversalDownTB.Text = string.Format("{0:0.00} %", reversal);
+                trendReversalUpTB.Text = string.Format("{0:0.00} %", reversal);
 
                 double lastPrice = (double)lastKline.OriginalKLine.Close;                
                 double moveTarget = TargetROE / Leverage;
