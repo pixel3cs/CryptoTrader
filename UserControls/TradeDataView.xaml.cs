@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Linq;
 using static CryptoTrader.Code.Utils;
+using System.Windows.Shapes;
 
 namespace CryptoTrader.UserControls
 {
@@ -26,6 +27,9 @@ namespace CryptoTrader.UserControls
 
         protected object viewControlsLock = new object();
         protected bool isDrawing = false;
+
+        private int row = 0, column = 0;
+        private bool maximized = false;
 
         private double zoomFactor = 2;
 
@@ -77,7 +81,9 @@ namespace CryptoTrader.UserControls
                 {
                     // clear view
                     klinesView.Children.Clear();
-                    dataLoadTime.Text = renderLoadTime.Text = pairPrice.Text = cursorPrice.Text = profitTB.Text = "";
+                    klinesDecoration.Children.Clear();
+                    dataLoadTime.Text = renderLoadTime.Text = cursorPrice.Text = profitTB.Text = intervalAVG.Text = "";
+
                     if (TradeSimulationChangedEvent != null)
                         TradeSimulationChangedEvent(null);
                 }
@@ -89,6 +95,49 @@ namespace CryptoTrader.UserControls
 
                 if (requestType == RequestType.LoadData)
                     liveData.LoadFromServer();
+            }
+        }
+
+        private void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData)
+        {
+            try
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    dataLoadTime.Text = string.Format("{0:0} ms", liveData.LastDataLoadTime.TotalMilliseconds);
+
+                    lock (viewControlsLock)
+                    {
+                        if (erasePreviousData)
+                        {
+                            klinesView.Children.Clear();
+                            klinesDecoration.Children.Clear();
+                        }
+
+                        if (newKlines != null)
+                        {
+                            foreach (var kline in newKlines)
+                            {
+                                CandleStick candleStick = new CandleStick(kline);
+                                klinesView.Children.Add(candleStick);
+                            }
+                        }
+
+                        if (liveData.IsTick)
+                        {
+                            int maxLines = 500;
+                            if (klinesView.Children.Count > maxLines)
+                                klinesView.Children.RemoveRange(0, klinesView.Children.Count - maxLines);
+                        }
+                    }
+
+                    setRenderTransform(Matrix.Identity, true);
+
+                    DrawKLines();
+                });
+            }
+            catch
+            {
             }
         }
 
@@ -114,7 +163,7 @@ namespace CryptoTrader.UserControls
             {
                 TextBlock tb = new TextBlock();
                 tb.Text = selectedValue;                
-                tb.Style = (Style)FindResource("ChooseCurrencyStyle");
+                tb.Style = (Style)FindResource("ChooseDisplayStyle");
 
                 if (panel == symbolsPanel)
                     tb.MouseDown += selectSymbol_MouseDown;
@@ -125,7 +174,7 @@ namespace CryptoTrader.UserControls
             }
 
             foreach (TextBlock tb in panel.Children)
-                tb.Style = (Style)FindResource("ChooseCurrencyStyle" + (tb.Text == selectedValue ? "Selected" : ""));
+                tb.Style = (Style)FindResource("ChooseDisplayStyle" + (tb.Text == selectedValue ? "Selected" : ""));
 
             string currentValue = panel.Tag as string;
             panel.Tag = selectedValue;
@@ -139,51 +188,22 @@ namespace CryptoTrader.UserControls
                 else
                     tb.Visibility = Visibility.Visible;
         }
-
-        private void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData)
+        
+        private void setRenderTransform(Matrix matrix, bool resetScale = false)
         {
-            try
-            {
-                this.Dispatcher.Invoke(() =>
-                {
-                    dataLoadTime.Text = string.Format("{0:0} ms", liveData.LastDataLoadTime.TotalMilliseconds);
+            klinesView.RenderTransform = new MatrixTransform(matrix);
+            klinesDecoration.RenderTransform = new MatrixTransform(matrix);
 
-                    lock (viewControlsLock)
-                    {
-                        if (erasePreviousData)
-                            klinesView.Children.Clear();
-
-                        if (newKlines != null)
-                        {
-                            foreach (var kline in newKlines)
-                            {
-                                CandleStick candleStick = new CandleStick(kline);
-                                klinesView.Children.Add(candleStick);
-                            }
-                        }
-
-                        if (liveData.IsTick)
-                        {
-                            int maxLines = 500;
-                            if (klinesView.Children.Count > maxLines)
-                                klinesView.Children.RemoveRange(0, klinesView.Children.Count - maxLines);
-                        }
-                    }                    
-
-                    resetRenderTransform();
-
-                    DrawKLines();
-                });
-            }
-            catch
-            {
-            }
+            if(resetScale)
+                zoomFactor = 2;                       
         }
 
-        private void resetRenderTransform()
+        private void UpdateCursorPrice()
         {
-            klinesView.RenderTransform = new MatrixTransform();
-            zoomFactor = 2;                            
+            cursorPrice.Margin = new Thickness(cursorPosition.X + 3, cursorPosition.Y + 3, 0, 0);
+            Point klinesViewPosition = Mouse.GetPosition(klinesView);
+            double currentRelativePrice = lowestPrice + (((double)klinesView.ActualHeight - (double)klinesViewPosition.Y) * (highestPrice - lowestPrice) / klinesView.ActualHeight);
+            cursorPrice.Text = currentRelativePrice.ToString("0.00000");
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -192,6 +212,7 @@ namespace CryptoTrader.UserControls
             DrawKLines();
         }
 
+        int drawings = 0;
         protected void DrawKLines()
         {
             if (isDrawing)
@@ -219,7 +240,7 @@ namespace CryptoTrader.UserControls
                 highestPrice = 0;
 
                 // initial calculations
-                foreach (CandleStick candleStick in klinesView.Children.OfType<CandleStick>())
+                foreach (CandleStick candleStick in klinesView.Children)
                 {
                     klines.Add(candleStick);
 
@@ -237,13 +258,8 @@ namespace CryptoTrader.UserControls
                 int index = 0;
                 foreach (CandleStick candleStick in klines)
                 {
-                    double xViewLeft = CalculateViewWidth(viewWidth, 0, klines.Count * 1.0d, index + 0.25d);
-                    double xViewRight = CalculateViewWidth(viewWidth, 0, klines.Count * 1.0d, index + 1);
-                    Canvas.SetLeft(candleStick, (double)xViewLeft);
-                    candleStick.Width = (double)Math.Abs(xViewRight - xViewLeft);
-
-                    candleStick.CalculateViewPosition(viewHeight, lowestPrice, highestPrice);
-
+                    candleStick.SetWidthPositions(viewWidth, 0, klines.Count, index);
+                    candleStick.SetHeightPositions(viewHeight, lowestPrice, highestPrice);
                     index++;
                 }
 
@@ -264,19 +280,8 @@ namespace CryptoTrader.UserControls
                 // calculate normal bars
                 if (CandleType == "BAR")
                 {
-                    CandleStick prevCs = null;
                     foreach (CandleStick candleStick in klines)
-                    {
-                        if (prevCs != null)
-                        {
-                            double difference = candleStick.Low - prevCs.Low + candleStick.High - prevCs.High;
-                            if (difference >= 0 && candleStick.Down) candleStick.InverseTrend();
-                            if (difference < 0 && candleStick.Up) candleStick.InverseTrend();
-                        }
-
                         candleStick.Fill(candleStick.Up ? greenBrush : redBrush);
-                        prevCs = candleStick;                        
-                    }
                 }
 
                 // calculate volume
@@ -311,7 +316,7 @@ namespace CryptoTrader.UserControls
                 }
 
                 // calculate trends
-                if (CandleType == "AI" && realTimeTrades == null)
+                if (CandleType == "UD%" && realTimeTrades == null)
                 {
                     TradeHelper simulation = new TradeHelper(firstKline.Open, lastKline.Close, reversal, reversal, Symbol, TradingType.CandleStickSimulation);
                     simulation.LastTrendIsDown = true; // always assume we are going down
@@ -343,7 +348,7 @@ namespace CryptoTrader.UserControls
                         TradeSimulationChangedEvent(simulation);
                 }
 
-                if(CandleType == "AI" && realTimeTrades != null)
+                if(CandleType == "UD%" && realTimeTrades != null)
                 {
                     foreach (CandleStick candleStick in klines)
                     {
@@ -351,14 +356,37 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // calculate price fluctuation parameters
-                trendReversalDownTB.Text = string.Format("{0:0.00} %", reversal);
-                trendReversalUpTB.Text = string.Format("{0:0.00} %", reversal);
+                if(CandleType == "TA")
+                {
+                    foreach (CandleStick candleStick in klines)
+                    {
+                        candleStick.Fill(candleStick.Up ? greenBrush : redBrush);
+                    }
+                }
 
-                double lastPrice = (double)lastKline.OriginalKLine.Close;                
-                double moveTarget = TargetROE / Leverage;
-                pairPrice.Text = string.Format("{0:0.00000}", lastPrice);
-                targetPrice.Text = string.Format("Target {0:0.00}% (±{1:0.00000}) {2:0.00000}", moveTarget, (moveTarget / 100d) * lastPrice, averageFluctuationPerCandlestick);
+                // add decorative lines
+                klinesDecoration.Children.Clear();
+
+                double targetPrice = ((TargetROE / Leverage) / 100d) * lastKline.Close;
+                double longClose = Utils.CalculateViewHeight(viewHeight, lowestPrice, highestPrice, lastKline.Close + targetPrice);
+                double shortClose = Utils.CalculateViewHeight(viewHeight, lowestPrice, highestPrice, lastKline.Close - targetPrice);
+
+                Line line = new Line() { X1 = viewWidth - 20, Y1 = viewHeight - lastKline.ViewClose, X2 = viewWidth, Y2 = viewHeight - lastKline.ViewClose };
+                line.StrokeThickness = 1;
+                line.Stroke = Brushes.Orange;
+                klinesDecoration.Children.Add(line);
+                line = new Line() { X1 = viewWidth - 20, Y1 = viewHeight - longClose, X2 = viewWidth, Y2 = viewHeight - longClose };
+                line.StrokeThickness = 2;
+                line.Stroke = greenBrush;
+                klinesDecoration.Children.Add(line);
+                line = new Line() { X1 = viewWidth - 20, Y1 = viewHeight - shortClose, X2 = viewWidth, Y2 = viewHeight - shortClose };
+                line.StrokeThickness = 2;
+                line.Stroke = redBrush;
+                klinesDecoration.Children.Add(line);
+
+                // display parameters
+                udCandleType.ToolTip = string.Format("{0:0.00} %", reversal);
+                intervalAVG.Text = string.Format("AVG ${0:0.00000}", averageFluctuationPerCandlestick);
 
                 UpdateCursorPrice();
             }            
@@ -368,22 +396,52 @@ namespace CryptoTrader.UserControls
 
             isDrawing = false;
         }
-
-        private void UpdateCursorPrice()
+        
+        private void selectSymbol_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            cursorPrice.Margin = new Thickness(cursorPosition.X + 3, cursorPosition.Y + 3, 0, 0);
-            Point klinesViewPosition = Mouse.GetPosition(klinesView);
-            double currentRelativePrice = lowestPrice + (((double)klinesView.ActualHeight - (double)klinesViewPosition.Y) * (highestPrice - lowestPrice) / klinesView.ActualHeight);
-            cursorPrice.Text = currentRelativePrice.ToString("0.00000");
+            e.Handled = true;
+            TextBlock tbSender = sender as TextBlock;
+            SwitchData(tbSender.Text, this.Interval, RequestType.LoadData);
         }
 
-        private double CalculateViewWidth(double viewWidth, double lowestLeft, double highestRight, double priceWidth)
+        private void selectInterval_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (highestRight == lowestLeft) return 0;
-            return ((priceWidth - lowestLeft) * viewWidth) / (highestRight - lowestLeft);
+            e.Handled = true;
+            TextBlock tbSender = sender as TextBlock;
+            SwitchData(this.Symbol, tbSender.Text, RequestType.LoadData);
         }
 
-        private void UserControl_MouseLeave(object sender, MouseEventArgs e)
+        private void selectCandleType_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+            TextBlock tbSender = sender as TextBlock;
+            selectPanelUIOption(candelTypesPanel, tbSender.Text);
+            DrawKLines();
+        }
+
+        private void selectTool_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+
+            foreach (TextBlock tb in toolsPanel.Children)
+                tb.Style = (Style)FindResource("ChooseToolStyle");
+
+            TextBlock tbSender = sender as TextBlock;
+            bool tbSenderIsCurrentlySelected = (tbSender.Tag == toolsPanel.Tag);
+
+            if (tbSenderIsCurrentlySelected == false)
+            {
+                toolsPanel.Tag = tbSender.Tag;
+                tbSender.Style = (Style)FindResource("ChooseToolStyleSelected");
+            }
+            else
+            {
+                toolsPanel.Tag = null;
+                tbSender.Style = (Style)FindResource("ChooseToolStyle");
+            }
+        }
+
+        private void klinesView_MouseLeave(object sender, MouseEventArgs e)
         {
             cursorPrice.Text = "";
         }
@@ -397,7 +455,7 @@ namespace CryptoTrader.UserControls
             {
                 Matrix m = klinesView.RenderTransform.Value;                
                 m.Translate(cursorPosition.X - cursorPreviousPosition.X, cursorPosition.Y - cursorPreviousPosition.Y);
-                klinesView.RenderTransform = new MatrixTransform(m);
+                setRenderTransform(m);
             }
             
             UpdateCursorPrice();
@@ -414,7 +472,7 @@ namespace CryptoTrader.UserControls
 
             if (e.ChangedButton == MouseButton.Right)
             {
-                resetRenderTransform();
+                setRenderTransform(Matrix.Identity, true);
             }
         }
 
@@ -438,7 +496,7 @@ namespace CryptoTrader.UserControls
 
                 Matrix m = klinesView.RenderTransform.Value;
                 m.ScaleAt(1 + 1 / zoomFactor, 1 + 1 / zoomFactor, klinesViewPosition.X, klinesViewPosition.Y);
-                klinesView.RenderTransform = new MatrixTransform(m);
+                setRenderTransform(m);
             }
             else
             {
@@ -448,33 +506,40 @@ namespace CryptoTrader.UserControls
                 Matrix m = klinesView.RenderTransform.Value;
                 m.ScaleAt(1 - 1 / zoomFactor, 1 - 1 / zoomFactor, klinesViewPosition.X, klinesViewPosition.Y);
 
-                if(m.Determinant < 1)
-                    resetRenderTransform();
+                if (m.Determinant < 1)
+                    setRenderTransform(Matrix.Identity, true);
                 else
-                    klinesView.RenderTransform = new MatrixTransform(m);
+                    setRenderTransform(m);
             }            
         }
 
-        private void selectSymbol_MouseDown(object sender, MouseButtonEventArgs e)
+        private void klinesView_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
-            TextBlock tbSender = sender as TextBlock;
-            SwitchData(tbSender.Text, this.Interval, RequestType.LoadData);
-        }
+            Grid parentGrid = this.Parent as Grid;
 
-        private void selectInterval_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            e.Handled = true;
-            TextBlock tbSender = sender as TextBlock;
-            SwitchData(this.Symbol, tbSender.Text, RequestType.LoadData);
-        }
+            if (maximized)
+            {
+                Grid.SetRow(this, row);
+                Grid.SetColumn(this, column);
+                Grid.SetRowSpan(this, 1);
+                Grid.SetColumnSpan(this, 1);
+                Grid.SetZIndex(this, 0);
+                maximized = false;
+            }
+            else
+            {
+                row = Grid.GetRow(this);
+                column = Grid.GetColumn(this);
+                Grid.SetRow(this, 0);
+                Grid.SetColumn(this, 0);
+                Grid.SetRowSpan(this, parentGrid.RowDefinitions.Count);
+                Grid.SetColumnSpan(this, parentGrid.ColumnDefinitions.Count);
+                Grid.SetZIndex(this, 1);
+                maximized = true;
+            }
 
-        private void selectCandleType_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            e.Handled = true;
-            TextBlock tbSender = sender as TextBlock;
-            selectPanelUIOption(candelTypesPanel, tbSender.Text);
-            DrawKLines();
+            setRenderTransform(Matrix.Identity, true);
         }
 
         public void SafelyClose()

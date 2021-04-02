@@ -6,45 +6,50 @@
             xmlns:local="clr-namespace:CryptoTrader.UserControls"
             mc:Ignorable="d" d:DesignHeight="400" d:DesignWidth="800"
             Cursor="Cross" Background="#000000" 
-            PreviewMouseWheel="klinesView_MouseWheel" PreviewMouseMove="klinesView_PreviewMouseMove" 
-            MouseDown="klinesView_MouseDown" MouseUp="klinesView_MouseUp" MouseLeave="UserControl_MouseLeave">
+            PreviewMouseWheel="klinesView_MouseWheel" PreviewMouseMove="klinesView_PreviewMouseMove"  PreviewMouseDoubleClick="klinesView_PreviewMouseDoubleClick"
+            MouseDown="klinesView_MouseDown" MouseUp="klinesView_MouseUp" MouseLeave="klinesView_MouseLeave">
     <Grid x:Name="mainGrid" ClipToBounds="True">
         <Canvas x:Name="klinesView" Margin="0,22,0,22"/>
+        <Canvas x:Name="klinesDecoration" Margin="0,22,0,22"/>
 
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal">
-            <StackPanel x:Name="candelTypesPanel" Tag="AI" Orientation="Horizontal">
-                <TextBlock Text="AI" Style="{StaticResource ResourceKey=ChooseCurrencyStyleSelected}" MouseDown="selectCandleType_MouseDown"/>
-                <TextBlock Text="HA" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectCandleType_MouseDown"/>
-                <TextBlock Text="BAR" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectCandleType_MouseDown"/>
-                <TextBlock Text="VOL" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectCandleType_MouseDown"/>
+            <StackPanel x:Name="candelTypesPanel" Tag="TA" Orientation="Horizontal">
+                <TextBlock Text="TA" Style="{StaticResource ResourceKey=ChooseDisplayStyleSelected}" MouseDown="selectCandleType_MouseDown"/>
+                <TextBlock Text="UD%" x:Name="udCandleType" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
+                <TextBlock Text="HA" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
+                <TextBlock Text="BAR" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
+                <TextBlock Text="VOL" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
             </StackPanel>
-            <TextBlock Text=" &#129147; " Foreground="Red" Style="{StaticResource ResourceKey=TBStyle}"/>
-            <TextBlock x:Name="trendReversalDownTB" Text="" Style="{StaticResource ResourceKey=TBStyle}"/>
-            <TextBlock Text=" &#129145; " Foreground="Green" Style="{StaticResource ResourceKey=TBStyle}"/>
-            <TextBlock x:Name="trendReversalUpTB" Text="" Style="{StaticResource ResourceKey=TBStyle}"/>
-            <TextBlock x:Name="pairPrice" Text="" Margin="10,2,0,0" FontSize="14" Foreground="Yellow"/>
-            <TextBlock x:Name="targetPrice" Text="" Margin="10,2,0,0" FontSize="14" Foreground="LightGray"/>
+
+            <StackPanel x:Name="toolsPanel" Orientation="Horizontal" Margin="5,0,0,0">
+                <TextBlock Text="&#129149;" Tag="lineup" Foreground="#55dd55" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="selectTool_MouseDown"/>
+                <TextBlock Text="&#129150;" Tag="linedown" Foreground="#ff6666" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="selectTool_MouseDown"/>
+            </StackPanel>
         </StackPanel>
 
-        <StackPanel x:Name="symbolsPanel" HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+        <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
+            <TextBlock x:Name="intervalAVG" Text="" Margin="0,0,10,0" Padding="0" FontSize="15" Foreground="Yellow"/>
+
+            <StackPanel x:Name="symbolsPanel" Orientation="Horizontal">
+            </StackPanel>
         </StackPanel>
 
         <StackPanel x:Name="intervalsPanel" HorizontalAlignment="Left" VerticalAlignment="Bottom" Orientation="Horizontal">
-            <TextBlock Text="1d" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="12h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="4h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="1h" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="30m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="15m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="5m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="3m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="1m" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="30s" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="15s" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="5s" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="3s" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="1s" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
-            <TextBlock Text="tick" Style="{StaticResource ResourceKey=ChooseCurrencyStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="1d" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="12h" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="4h" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="1h" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="30m" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="15m" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="5m" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="3m" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="1m" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="30s" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="15s" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="5s" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="3s" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="1s" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
+            <TextBlock Text="tick" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectInterval_MouseDown" Visibility="Collapsed"/>
         </StackPanel>
 
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">

@@ -21,11 +21,13 @@ namespace CryptoTrader
             int interval = 0;
             foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
             {
-                tdv.SwitchData("BTCUSDT", ViewIntervals[interval++], RequestType.DoNotLoad);
+                tdv.SwitchData(Utils.InitialSymbol, ViewIntervals[interval++], RequestType.DoNotLoad);
                 tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);
             }
 
-            AllPricesTickClient.PricesAvailableEvent += AllPricesTickClient_PricesAvailableEvent;
+            currentSymbolTb.Text = string.Format("Current Symbol: {0}", Utils.InitialSymbol);
+
+            AllPricesTickClient.PricesAvailableEvent += AllPricesTickClient_PricesAvailableEvent; // fired once per second
             AllPricesTickClient.StartBroadcastingAllNewPrices();
         }
 
@@ -48,6 +50,13 @@ namespace CryptoTrader
                 {
                     price.SortType = priceSortType;
                     usdt.Items.Add(price);
+
+                    if (price.Symbol.Name == tradeDataView.Symbol)
+                    {
+                        decimal moveTarget = (decimal)targetROETb.Value / (decimal)leverageTB.Value;
+                        currentPriceTb.Text = string.Format("Current Price: ${0:0.00000}", price.Price.LastPrice);
+                        targetPriceTb.Text = string.Format("Target Price: ±${0:0.00000}", (moveTarget / 100m) * price.Price.LastPrice);
+                    }
                 }
             });
         }
@@ -62,8 +71,9 @@ namespace CryptoTrader
                 return;
 
             livePrice.Displayed = true;
-            int interval = 0;
+            currentSymbolTb.Text = string.Format("Current Symbol: {0}", livePrice.Symbol.Name);
 
+            int interval = 0;
             foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
                 tdv.SwitchData(livePrice.Price.Symbol, ViewIntervals[interval++], RequestType.DoNotLoad);
         }

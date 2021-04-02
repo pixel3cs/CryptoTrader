@@ -45,7 +45,10 @@
                             <TextBlock x:Name="simulationProfitTB" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
 
                             <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                                <TextBlock x:Name="currentSymbolTb" Text="Current Symbol:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                <TextBlock x:Name="currentPriceTb" Text="Current Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
                                 <TextBlock x:Name="targetMoveTb" Text="Target Move:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                <TextBlock x:Name="targetPriceTb" Text="Target Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
                             </StackPanel>
 
                             <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">

@@ -68,7 +68,7 @@ namespace CryptoTrader.Code
             var socketCall = allPricesSocketClient.FuturesUsdt.SubscribeToAllSymbolTickerUpdates(allSymbolMiniTickerServerHandler);
         }
 
-        // fired each second
+        // fired once per second
         private static void allSymbolMiniTickerServerHandler(IEnumerable<IBinanceTick> ticks)
         {
             bool changed = false;

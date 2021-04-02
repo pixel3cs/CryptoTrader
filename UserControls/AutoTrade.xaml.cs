@@ -31,7 +31,7 @@ namespace CryptoTrader.UserControls
                     TradeDataView tdv = ui as TradeDataView;
                     tdv.SetTrendReversals(0, 0);
                     tdv.SetRealTimeTradesList(tradeHelper);
-                    tdv.SwitchData("BTCUSDT", intervals[0], Code.Utils.RequestType.DoNotLoad);
+                    tdv.SwitchData(Utils.InitialSymbol, intervals[0], Code.Utils.RequestType.DoNotLoad);
                     tdv.SwitchData(simulation.Symbol, intervals[0], Code.Utils.RequestType.DoNotLoad);
                     intervals.RemoveAt(0);
                 }

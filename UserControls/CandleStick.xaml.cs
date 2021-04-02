@@ -1,4 +1,5 @@
 ﻿using Binance.Net.Interfaces;
+using CryptoTrader.Code;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -53,17 +54,26 @@ namespace CryptoTrader.UserControls
             this.Low = (double)cs.Low;
         }
 
+        public void SetWidthPositions(double viewWidth, double lowestLeft, double highestRight, double priceWidth)
+        {
+            double xViewLeft = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, priceWidth + 0.25d);
+            double xViewRight = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, priceWidth + 1d);
+            
+            Canvas.SetLeft(this, (double)xViewLeft);
+            this.Width = (double)Math.Abs(xViewRight - xViewLeft);
+        }
+
         //private static double lastY = 0;
         //private static CandleStick lastC = null;
-        public void CalculateViewPosition(double viewHeight, double lowestLow, double highestHigh)
+        public void SetHeightPositions(double viewHeight, double lowestLow, double highestHigh)
         {
             //if (lastC != null && (this.Up != lastC.Up))
             //    lastY = 0;
 
-            ViewHigh = CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.High);
-            ViewLow = CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Low);
-            ViewOpen = CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Open);
-            ViewClose = CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Close);
+            ViewHigh = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.High);
+            ViewLow = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Low);
+            ViewOpen = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Open);
+            ViewClose = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Close);
 
             Canvas.SetTop(this, (double)(viewHeight - ViewHigh));
             this.Height = (double)(ViewHigh - ViewLow);
@@ -90,12 +100,6 @@ namespace CryptoTrader.UserControls
             double tempClose = this.Close;
             this.Close = this.Open;
             this.Open = tempClose;
-        }
-
-        private double CalculateViewHeight(double viewHeight, double lowestLow, double highestHigh, double priceHeight)
-        {
-            if (highestHigh == lowestLow) return 0;
-            return ((priceHeight - lowestLow) * viewHeight) / (highestHigh - lowestLow);
         }
 
     }

@@ -39,7 +39,7 @@
         </Setter>
     </Style>
 
-    <Style x:Key="ChooseCurrencyStyle" TargetType="{x:Type TextBlock}">
+    <Style x:Key="ChooseDisplayStyle" TargetType="{x:Type TextBlock}">
         <Setter Property="Background" Value="Transparent"/>
         <Setter Property="Foreground" Value="#A0A0A0"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
@@ -50,6 +50,54 @@
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#4C4C4C"></Setter>
+                <Setter Property="Foreground" Value="#EEEEEE"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ChooseDisplayStyleSelected" TargetType="{x:Type TextBlock}">
+        <Setter Property="Background" Value="#4C4C4C"/>
+        <Setter Property="Foreground" Value="#CCCCCC"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="5,0,5,0"/>
+        <Setter Property="Margin" Value="0,0,0,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="#EEEEEE"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ChooseToolStyle" TargetType="{x:Type TextBlock}">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="#A0A0A0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="Padding" Value="4,0,4,0"/>
+        <Setter Property="Margin" Value="0,0,0,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="#555"></Setter>
+                <Setter Property="Foreground" Value="#EEEEEE"></Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="ChooseToolStyleSelected" TargetType="{x:Type TextBlock}">
+        <Setter Property="Background" Value="#555"/>
+        <Setter Property="Foreground" Value="#CCCCCC"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="Padding" Value="5,0,5,0"/>
+        <Setter Property="Margin" Value="0,0,0,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Foreground" Value="#EEEEEE"></Setter>
             </Trigger>
         </Style.Triggers>
@@ -68,22 +116,6 @@
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Background" Value="#555555"></Setter>
                 <Setter Property="Foreground" Value="#999999"></Setter>
-            </Trigger>
-        </Style.Triggers>
-    </Style>
-
-    <Style x:Key="ChooseCurrencyStyleSelected" TargetType="{x:Type TextBlock}">
-        <Setter Property="Background" Value="#4C4C4C"/>
-        <Setter Property="Foreground" Value="#CCCCCC"/>
-        <Setter Property="VerticalAlignment" Value="Center"/>
-        <Setter Property="FontSize" Value="16"/>
-        <Setter Property="FontWeight" Value="Bold"/>
-        <Setter Property="Padding" Value="5,0,5,0"/>
-        <Setter Property="Margin" Value="0,0,0,0"/>
-        <Setter Property="Cursor" Value="Hand"/>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Foreground" Value="#EEEEEE"></Setter>
             </Trigger>
         </Style.Triggers>
     </Style>
