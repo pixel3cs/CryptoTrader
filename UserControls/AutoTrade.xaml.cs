@@ -28,7 +28,7 @@ namespace CryptoTrader.UserControls
                 if (ui is TradeDataView)
                 {
                     TradeDataView tdv = ui as TradeDataView;
-                    tdv.SetTargetPrice(0, 0);
+                    tdv.SetTargetPrice(0);
                     tdv.SetRealTimeTradesList(tradeHelper);
                     tdv.SwitchData(Utils.InitialSymbol, intervals[0], Utils.RequestType.DoNotLoad);
                     tdv.SwitchData(simulation.Symbol, intervals[0], Utils.RequestType.DoNotLoad);
@@ -126,7 +126,7 @@ namespace CryptoTrader.UserControls
                 if (ui is TradeDataView)
                 {
                     TradeDataView tdv = ui as TradeDataView;
-                    tdv.SetTargetPrice(0, 0);
+                    tdv.SetTargetPrice(0);
                 }
         }
     }

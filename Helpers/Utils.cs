@@ -55,7 +55,20 @@ namespace CryptoTrader
 
         public static int IntervalInMinutes(string interval)
         {
-            return 0;
+            switch (interval)
+            {
+                case "1m": return 1;
+                case "3m": return 3;
+                case "5m": return 5;
+                case "15m": return 15;
+                case "30m": return 30;
+                case "1h": return 60;
+                case "2h": return 2 * 60;
+                case "4h": return 4 * 60;
+                case "12h": return 12 * 60;
+                case "1d": return 24 * 60;
+                default: return 0;
+            }
         }
     }
 

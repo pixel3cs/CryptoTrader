@@ -9,7 +9,6 @@ namespace CryptoTrader.UserControls
     public partial class CandleStick : UserControl
     {
         public double Low, High, Open, Close;
-        public double ViewHigh, ViewLow, ViewOpen, ViewClose;
         public IBinanceKline OriginalKLine { get; private set; }
         public bool Up { get { return this.Close >= this.Open; } }
         public bool Down { get { return this.Close < this.Open; } }
@@ -45,13 +44,13 @@ namespace CryptoTrader.UserControls
             this.Low = (double)OriginalKLine.Low;
         }
 
-        public void SetWidthPositions(double viewWidth, double lowestLeft, double highestRight, double priceWidth)
+        public void SetWidthPositions(double viewWidth, double lowestLeft, double highestRight, double xPosition)
         {
-            double xViewLeft = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, priceWidth + 0.25d);
-            double xViewRight = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, priceWidth + 1d);
+            double xViewLeft = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, xPosition + 0.25d);
+            double xViewRight = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, xPosition + 1d);
             
-            Canvas.SetLeft(this, (double)xViewLeft);
-            this.Width = (double)Math.Abs(xViewRight - xViewLeft);
+            Canvas.SetLeft(this, xViewLeft);
+            this.Width = Math.Abs(xViewRight - xViewLeft);
         }
 
         //private static double lastY = 0;
@@ -61,16 +60,16 @@ namespace CryptoTrader.UserControls
             //if (lastC != null && (this.Up != lastC.Up))
             //    lastY = 0;
 
-            ViewHigh = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.High);
-            ViewLow = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Low);
-            ViewOpen = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Open);
-            ViewClose = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Close);
+            double ViewHigh = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.High);
+            double ViewLow = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Low);
+            double ViewOpen = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Open);
+            double ViewClose = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Close);
 
-            Canvas.SetTop(this, (double)(viewHeight - ViewHigh));
-            this.Height = (double)(ViewHigh - ViewLow);
+            Canvas.SetTop(this, viewHeight - ViewHigh);
+            this.Height = ViewHigh - ViewLow;
 
-            body.Height = (double)Math.Abs(ViewOpen - ViewClose);
-            body.Margin = new Thickness(0, (double)(ViewHigh - (this.Up ? ViewClose : ViewOpen)), 0, 0);
+            body.Height = Math.Abs(ViewOpen - ViewClose);
+            body.Margin = new Thickness(0, ViewHigh - (this.Up ? ViewClose : ViewOpen), 0, 0);
 
             //if (lastC != null)
             //{

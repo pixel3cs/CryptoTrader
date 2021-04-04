@@ -21,7 +21,7 @@ namespace CryptoTrader
             foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
             {
                 tdv.SwitchData(Utils.InitialSymbol, ViewIntervals[interval++], RequestType.DoNotLoad);
-                tdv.SetTargetPrice(leverageTB.Value, targetROETb.Value);
+                tdv.SetTargetPrice(targetROETb.Value / leverageTB.Value);
             }
 
             currentSymbolTb.Text = string.Format("Current Symbol: {0}", Utils.InitialSymbol);
@@ -190,13 +190,13 @@ namespace CryptoTrader
             if (targetROETb == null || leverageTB == null || targetMoveTb == null)
                 return;
 
-            double moveTarget = targetROETb.Value / leverageTB.Value;
-            targetMoveTb.Text = string.Format("Target Move: {0:0.00}%", moveTarget);
+            double targetMovePercent = targetROETb.Value / leverageTB.Value;
+            targetMoveTb.Text = string.Format("Target Move: {0:0.00}%", targetMovePercent);
 
             if (tradeDataViews != null)
             {
                 foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
-                    tdv.SetTargetPrice(leverageTB.Value, targetROETb.Value);                    
+                    tdv.SetTargetPrice(targetMovePercent);                    
             }
         }
 

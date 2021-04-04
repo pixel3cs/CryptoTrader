@@ -44,8 +44,7 @@ namespace CryptoTrader.UserControls
         public string Interval { get { return (string)intervalsPanel.Tag; } }
         public string CandleType { get { return (string)candelTypesPanel.Tag; } }
 
-        public double Leverage { get; private set; }
-        public double TargetROE { get; private set; }
+        public double TargetMovePercent { get; private set; }
         
 
         private bool showTicks = false;
@@ -118,17 +117,14 @@ namespace CryptoTrader.UserControls
                             }
 
                             // add target trend lines
-                            IBinanceKline lastKline = newKlines.Last();
-                            List<TrendLine> targetTrendLines = TrendLineHelper.GetTargetLines(TargetROE, Leverage, (double)lastKline.Close, lastKline.CloseTime, Interval);
-                            foreach (var targetTrendLine in targetTrendLines)
+                            foreach (var targetTrendLine in TrendLineHelper.GetTargetLines(Interval, TargetMovePercent, newKlines.Last()))
                             {
                                 TrendLineStick trendLineStick = new TrendLineStick(targetTrendLine);
                                 klinesView.Children.Add(trendLineStick);
                             }
 
                             // add new trend lines
-                            IEnumerable<TrendLine> trendLines = TrendLineData.LoadTrendLines(Symbol, Interval);
-                            foreach (var trendLine in trendLines)
+                            foreach (var trendLine in TrendLineData.LoadTrendLines(Symbol, Interval))
                             {
                                 TrendLineStick trendLineStick = new TrendLineStick(trendLine);
                                 klinesView.Children.Add(trendLineStick);
@@ -166,14 +162,13 @@ namespace CryptoTrader.UserControls
             }
         }
 
-        public void SetTargetPrice(double leverage, double targetROE)
+        public void SetTargetPrice(double targetMovePercent)
         {
-            this.Leverage = leverage;
-            this.TargetROE = targetROE;
+            this.TargetMovePercent = targetMovePercent;
 
             if (klinesView.Children.Count > 0)
             {
-                TrendLineHelper.UpdateTargetLines(klinesView, TargetROE, Leverage);
+                TrendLineHelper.UpdateTargetLines(klinesView, targetMovePercent);
                 DrawKLines();
             }
         }
@@ -280,13 +275,32 @@ namespace CryptoTrader.UserControls
 
                 reversal = (double)(averageFluctuationPerCandlestick / lastKline.OriginalKLine.Close) * 4 * 100;
 
-                // view calculations
+                // set CandleStick positions
                 int index = 0;
                 foreach (CandleStick candleStick in klines)
                 {
                     candleStick.SetWidthPositions(viewWidth, 0, klines.Count, index);
                     candleStick.SetHeightPositions(viewHeight, lowestPrice, highestPrice);
                     index++;
+                }
+
+                // set TrendLines positions
+                List<TrendLineStick> tlines = klinesView.Children.OfType<TrendLineStick>().ToList();
+                foreach (TrendLineStick trendLine in tlines)
+                {
+                    trendLine.SetPositions(viewWidth, viewHeight, lowestPrice, highestPrice, firstKline, lastKline);
+
+                    if (trendLine.OriginalTrendLine.LineType == TrendLineType.Normal.ToString())
+                    {
+                        trendLine.Fill(trendLine.Up ? greenBrush : redBrush);
+                    }
+                    else
+                    {
+                        if (trendLine.OriginalTrendLine.LineType == TrendLineType.TargetLong.ToString()) trendLine.Fill(greenBrush);
+                        if (trendLine.OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString()) trendLine.Fill(Brushes.Orange);
+                        if (trendLine.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString()) trendLine.Fill(redBrush);
+                    }
+                        
                 }
 
                 // calculate Heikin Ashi
@@ -390,13 +404,7 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // draw trend lines
-                List<TrendLineStick> tlines = klinesView.Children.OfType<TrendLineStick>().ToList();
-                foreach (TrendLineStick trendLine in tlines)
-                {
-                    trendLine.SetPositions(viewWidth, viewHeight);
-                    trendLine.Fill(trendLine.Up ? greenBrush : redBrush);
-                }
+
 
                 // display parameters
                 udCandleType.ToolTip = string.Format("{0:0.00} %", reversal);
