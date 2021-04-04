@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using static CryptoTrader.Code.Utils;
+using static CryptoTrader.Utils;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
     public class TradeHelper
     {

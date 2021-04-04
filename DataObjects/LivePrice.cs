@@ -1,8 +1,8 @@
 ﻿using Binance.Net.Interfaces;
 using Binance.Net.Objects.Futures.MarketData;
-using static CryptoTrader.Code.Utils;
+using static CryptoTrader.Utils;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
     public class LivePrice
     {
@@ -66,7 +66,7 @@ namespace CryptoTrader.Code
                 Price.QuoteVolume / 1000000,
                 displayedCharacter,
                 displayedPercentage,
-                Displayed ? "----------" : ""
+                Displayed ? "[viewed]" : ""
                 );
         }
     }

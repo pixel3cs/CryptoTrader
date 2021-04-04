@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
     // only one instance of BinanceTickClient per Symbol
     // multiple "data change events" for the same Interval (example: 2 TradeDataView controls having same Symbol + Interval)
@@ -73,27 +73,23 @@ namespace CryptoTrader.Code
             }
         }
 
-        public void StopBroadcastingData(string selectedInterval, ServerDataProcessDelegate serverDataHandler)
+        public void StopBroadcastingData(ServerDataProcessDelegate serverDataHandler)
         {
-            // call on a new thread, otherwise this method can be called from a WPF Dispatcher which is invoked from Socket thread and this will cause application freeze
-            // Socket thread lock dataHandlersLock and call WPF Dispatcher which call StopBroadcastingData that lock dataHandlersLock which will freeze application
-            // because Socket thread wait for WPF Dispatcher that wait for Socket thread to release dataHandlersLock in order to process StopBroadcastingData
-            ThreadStart ts = new ThreadStart(() =>
+            lock (dataHandlersLock)
             {
-                lock (dataHandlersLock)
+                // serverDataHandler instance is a different object for each TradeDataView
+                int foundInterval = -1;
+                foreach (int interval in serverDataHandlers.Keys)
+                    if (serverDataHandlers[interval].Contains(serverDataHandler))
+                        foundInterval = interval;
+
+                if (foundInterval >= 0)
                 {
-                    int interval = (selectedInterval == "tick" ? 0 : int.Parse(selectedInterval.Replace("s", "")));
-                    if (serverDataHandlers.ContainsKey(interval))
-                    {
-                        serverDataHandlers[interval].Remove(serverDataHandler);
-                        if (serverDataHandlers[interval].Count == 0)
-                            serverDataHandlers.Remove(interval);
-                    }
+                    serverDataHandlers[foundInterval].Remove(serverDataHandler);
+                    if (serverDataHandlers[foundInterval].Count == 0)
+                        serverDataHandlers.Remove(foundInterval);
                 }
-            });
-            Thread thread = new Thread(ts);
-            thread.IsBackground = true;
-            thread.Start();
+            }
         }
 
         // SOCKET CONNECTION CODE
@@ -183,7 +179,7 @@ namespace CryptoTrader.Code
                     if (serverDataHandlers.ContainsKey(0))
                     {
                         foreach (var serverDataHandler in serverDataHandlers[0])
-                            serverDataHandler(ticks, false);
+                            serverDataHandler(ticks, false, true);
                     }
                     ticks.Clear();
                 }
@@ -194,7 +190,7 @@ namespace CryptoTrader.Code
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s1 };
                         foreach (var serverDataHandler in serverDataHandlers[1])
-                            serverDataHandler(newKLines, false);
+                            serverDataHandler(newKLines, false, true);
                     }
                     s1 = null;
                 }
@@ -205,7 +201,7 @@ namespace CryptoTrader.Code
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s3 };
                         foreach (var serverDataHandler in serverDataHandlers[3])
-                            serverDataHandler(newKLines, false);
+                            serverDataHandler(newKLines, false, true);
                     }
                     s3 = null;
                     s3Count = 0;
@@ -217,7 +213,7 @@ namespace CryptoTrader.Code
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s5 };
                         foreach (var serverDataHandler in serverDataHandlers[5])
-                            serverDataHandler(newKLines, false);
+                            serverDataHandler(newKLines, false, true);
                     }
                     s5 = null;
                     s5Count = 0;
@@ -229,7 +225,7 @@ namespace CryptoTrader.Code
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s15 };
                         foreach (var serverDataHandler in serverDataHandlers[15])
-                            serverDataHandler(newKLines, false);
+                            serverDataHandler(newKLines, false, true);
                     }
                     s15 = null;
                     s15Count = 0;
@@ -241,7 +237,7 @@ namespace CryptoTrader.Code
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s30 };
                         foreach (var serverDataHandler in serverDataHandlers[30])
-                            serverDataHandler(newKLines, false);
+                            serverDataHandler(newKLines, false, true);
                     }
                     s30 = null;
                     s30Count = 0;

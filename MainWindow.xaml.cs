@@ -1,5 +1,4 @@
-﻿using CryptoTrader.Code;
-using CryptoTrader.UserControls;
+﻿using CryptoTrader.UserControls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
-using static CryptoTrader.Code.Utils;
+using static CryptoTrader.Utils;
 
 namespace CryptoTrader
 {
@@ -22,7 +21,7 @@ namespace CryptoTrader
             foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
             {
                 tdv.SwitchData(Utils.InitialSymbol, ViewIntervals[interval++], RequestType.DoNotLoad);
-                tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);
+                tdv.SetTargetPrice(leverageTB.Value, targetROETb.Value);
             }
 
             currentSymbolTb.Text = string.Format("Current Symbol: {0}", Utils.InitialSymbol);
@@ -197,7 +196,7 @@ namespace CryptoTrader
             if (tradeDataViews != null)
             {
                 foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
-                    tdv.SetTrendReversals(leverageTB.Value, targetROETb.Value);                    
+                    tdv.SetTargetPrice(leverageTB.Value, targetROETb.Value);                    
             }
         }
 

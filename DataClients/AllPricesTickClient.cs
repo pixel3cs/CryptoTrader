@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
     public class AllPricesTickClient
     {

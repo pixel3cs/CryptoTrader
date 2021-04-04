@@ -1,5 +1,4 @@
 ﻿using Binance.Net.Objects.Spot.MarketStream;
-using CryptoTrader.Code;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
@@ -29,10 +28,10 @@ namespace CryptoTrader.UserControls
                 if (ui is TradeDataView)
                 {
                     TradeDataView tdv = ui as TradeDataView;
-                    tdv.SetTrendReversals(0, 0);
+                    tdv.SetTargetPrice(0, 0);
                     tdv.SetRealTimeTradesList(tradeHelper);
-                    tdv.SwitchData(Utils.InitialSymbol, intervals[0], Code.Utils.RequestType.DoNotLoad);
-                    tdv.SwitchData(simulation.Symbol, intervals[0], Code.Utils.RequestType.DoNotLoad);
+                    tdv.SwitchData(Utils.InitialSymbol, intervals[0], Utils.RequestType.DoNotLoad);
+                    tdv.SwitchData(simulation.Symbol, intervals[0], Utils.RequestType.DoNotLoad);
                     intervals.RemoveAt(0);
                 }
 
@@ -127,7 +126,7 @@ namespace CryptoTrader.UserControls
                 if (ui is TradeDataView)
                 {
                     TradeDataView tdv = ui as TradeDataView;
-                    tdv.SetTrendReversals(0, 0);
+                    tdv.SetTargetPrice(0, 0);
                 }
         }
     }

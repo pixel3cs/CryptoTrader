@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
     public class Transaction
     {

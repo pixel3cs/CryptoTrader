@@ -4,38 +4,44 @@ using System;
 using System.Threading;
 using System.Windows.Input;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
-    public class LiveData 
+    public class LivePriceData 
     {
         private BinanceClient klinesClient = null;
         private BinanceTickClient tickClient = null;
-           
-        private string selectedSymbol, selectedInterval;
-        private KlineInterval klineInterval = KlineInterval.OneMinute;
-        public bool IsTick;        
-        public TimeSpan LastDataLoadTime { get; private set; }
-        
+       
         private ServerDataProcessDelegate serverDataHandler = null;
 
-        public LiveData(ServerDataProcessDelegate ServerDataHandler)
+        public TimeSpan LastDataLoadTime { get; private set; }
+
+        public LivePriceData(ServerDataProcessDelegate ServerDataHandler)
         {
             this.serverDataHandler = ServerDataHandler;
         }
 
-        public void SetSymbolAndInterval(string symbol, string interval)
+        public void LoadFromServer(string symbol, string interval)
+        {
+            ParameterizedThreadStart ts = new ParameterizedThreadStart(LoadFromServerThread);
+            Thread thread = new Thread(ts);
+            thread.IsBackground = true;
+            thread.Start(new string[] { symbol, interval });
+        }
+
+        private void LoadFromServerThread(object parameter)
         {
             // stop receiving data when symbol or interval of TradeDataView is changed
-            if (IsTick && tickClient != null)
-                tickClient.StopBroadcastingData(selectedInterval, serverDataHandler);
+            if (tickClient != null)
+                tickClient.StopBroadcastingData(serverDataHandler);
 
-            // set symbols and intervals
-            selectedSymbol = symbol;
-            selectedInterval = interval;
+            // variables
+            string[] strParams = (string[])parameter;
+            string symbol = strParams[0];
+            string interval = strParams[1];
+            bool isTick = (interval == "tick" || interval.EndsWith("s"));
 
-            IsTick = (interval == "tick" || interval.EndsWith("s"));
-
-            switch (selectedInterval)
+            KlineInterval klineInterval;
+            switch (interval)
             {
                 case "1m": klineInterval = KlineInterval.OneMinute; break;
                 case "3m": klineInterval = KlineInterval.ThreeMinutes; break;
@@ -49,50 +55,31 @@ namespace CryptoTrader.Code
                 case "1d": klineInterval = KlineInterval.OneDay; break;
                 default: klineInterval = KlineInterval.OneMinute; break;
             }
-        }
 
-        public void LoadFromServer()
-        {
-            ThreadStart ts = new ThreadStart(LoadFromServerThread);
-            Thread thread = new Thread(ts);
-            thread.IsBackground = true;
-            thread.Start();
-        }
-
-        private void LoadFromServerThread()
-        {
+            // load data
             DateTime dateStart = DateTime.Now;
 
-            if (IsTick == true && selectedSymbol != null && selectedInterval != null && serverDataHandler != null)
+            if (isTick == true && symbol != null && interval != null && serverDataHandler != null)
             {
                 if (tickClient == null)
-                    tickClient = BinanceTickClient.GetInstance(selectedSymbol);
+                    tickClient = BinanceTickClient.GetInstance(symbol);
 
-                tickClient.StartBroadcastingData(selectedInterval, serverDataHandler);
+                tickClient.StartBroadcastingData(interval, serverDataHandler);
             }
 
-            if (IsTick == false && selectedSymbol != null && selectedInterval != null && serverDataHandler != null)
+            if (isTick == false && symbol != null && interval != null && serverDataHandler != null)
             {
                 if (klinesClient == null)
-                    klinesClient = new Binance.Net.BinanceClient();
+                    klinesClient = new BinanceClient();
 
-                var serverResponse = klinesClient.FuturesUsdt.Market.GetKlines(selectedSymbol, klineInterval);
-                MainWindow.UpdateWeightUsage(serverResponse.ResponseHeaders);
+                var serverResponse = klinesClient.FuturesUsdt.Market.GetKlines(symbol, klineInterval);
+                MainWindow.UpdateWeightUsage(serverResponse.ResponseHeaders);                
 
                 if (serverResponse != null && serverResponse.Success)
-                    serverDataHandler(serverResponse.Data, true);
+                    serverDataHandler(serverResponse.Data, true, false);
             }
 
             LastDataLoadTime = DateTime.Now - dateStart;
-        }
-
-        public void ProcessMouseDownEvents(MouseButtonEventArgs e, bool hasData)
-        {
-            if (e.ChangedButton == MouseButton.Middle)
-                this.LoadFromServer();
-
-            if ((e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right) && hasData == false)
-                this.LoadFromServer();
         }
 
         public void SafelyClose()

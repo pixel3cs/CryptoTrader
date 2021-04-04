@@ -1,5 +1,4 @@
 ﻿using Binance.Net.Interfaces;
-using CryptoTrader.Code;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,11 +10,11 @@ namespace CryptoTrader.UserControls
     {
         public double Low, High, Open, Close;
         public double ViewHigh, ViewLow, ViewOpen, ViewClose;
-        public IBinanceKline OriginalKLine { get; set; }
+        public IBinanceKline OriginalKLine { get; private set; }
         public bool Up { get { return this.Close >= this.Open; } }
         public bool Down { get { return this.Close < this.Open; } }
 
-        public CandleStick()
+        private CandleStick()
         {
             InitializeComponent();
         }
@@ -44,14 +43,6 @@ namespace CryptoTrader.UserControls
             this.Open = (double)OriginalKLine.Open;
             this.High = (double)OriginalKLine.High;
             this.Low = (double)OriginalKLine.Low;
-        }
-
-        public void CopyFrom(CandleStick cs)
-        {
-            this.Close = (double)cs.Close;
-            this.Open = (double)cs.Open;
-            this.High = (double)cs.High;
-            this.Low = (double)cs.Low;
         }
 
         public void SetWidthPositions(double viewWidth, double lowestLeft, double highestRight, double priceWidth)
@@ -93,13 +84,6 @@ namespace CryptoTrader.UserControls
         {
             body.Fill = brush;
             line.Fill = brush;
-        }
-
-        public void InverseTrend()
-        {
-            double tempClose = this.Close;
-            this.Close = this.Open;
-            this.Open = tempClose;
         }
 
     }

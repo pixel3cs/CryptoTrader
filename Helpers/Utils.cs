@@ -2,9 +2,9 @@
 using Binance.Net.Objects.Spot.MarketStream;
 using System.Collections.Generic;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
-    public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData);
+    public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick);
     public delegate void LastTickValueDelegate(BinanceStreamAggregatedTrade trade);
 
     public class Utils
@@ -33,6 +33,14 @@ namespace CryptoTrader.Code
             PriceUpSinceWatching = 4
         }
 
+        public enum TrendLineType
+        {
+            Normal,
+            TargetLong,
+            TargetCurrent,
+            TargetShort
+        }
+
         public static double CalculateViewWidth(double viewWidth, double lowestLeft, double highestRight, double priceWidth)
         {
             if (highestRight == lowestLeft) return 0;
@@ -43,6 +51,11 @@ namespace CryptoTrader.Code
         {
             if (highestHigh == lowestLow) return 0;
             return ((priceHeight - lowestLow) * viewHeight) / (highestHigh - lowestLow);
+        }
+
+        public static int IntervalInMinutes(string interval)
+        {
+            return 0;
         }
     }
 

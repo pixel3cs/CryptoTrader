@@ -55,6 +55,7 @@
     </Reference>
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.IO, Version=4.1.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>packages\System.IO.4.3.0\lib\net462\System.IO.dll</HintPath>
       <Private>True</Private>
@@ -120,6 +121,7 @@
       <Private>True</Private>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -141,14 +143,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Code\AllPricesTickClient.cs" />
-    <Compile Include="Code\BinanceKLine.cs" />
-    <Compile Include="Code\BinanceTickClient.cs" />
-    <Compile Include="Code\TradeHelper.cs" />
-    <Compile Include="Code\Transaction.cs" />
-    <Compile Include="Code\LivePrice.cs" />
-    <Compile Include="Code\LiveData.cs" />
-    <Compile Include="Code\Utils.cs" />
+    <Compile Include="DataClients\AllPricesTickClient.cs" />
+    <Compile Include="DataObjects\BinanceKLine.cs" />
+    <Compile Include="DataClients\BinanceTickClient.cs" />
+    <Compile Include="Helpers\TradeHelper.cs" />
+    <Compile Include="DataObjects\Transaction.cs" />
+    <Compile Include="DataObjects\LivePrice.cs" />
+    <Compile Include="DataClients\LivePriceData.cs" />
+    <Compile Include="DataObjects\TrendLine.cs" />
+    <Compile Include="DataClients\TrendLineData.cs" />
+    <Compile Include="Helpers\TrendLineHelper.cs" />
+    <Compile Include="Helpers\Utils.cs" />
     <Compile Include="UserControls\CandleStick.xaml.cs">
       <DependentUpon>CandleStick.xaml</DependentUpon>
     </Compile>
@@ -160,6 +165,9 @@
     </Compile>
     <Compile Include="UserControls\TradeDataView.xaml.cs">
       <DependentUpon>TradeDataView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\TrendLineStick.xaml.cs">
+      <DependentUpon>TrendLineStick.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\WindowControlBar.xaml.cs">
       <DependentUpon>WindowControlBar.xaml</DependentUpon>
@@ -189,6 +197,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="UserControls\TradeDataView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\TrendLineStick.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

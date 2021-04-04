@@ -1,5 +1,4 @@
 ﻿using Binance.Net.Interfaces;
-using CryptoTrader.Code;
 using System;
 using System.Collections.Generic;
 using System.Windows;
@@ -7,7 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Linq;
-using static CryptoTrader.Code.Utils;
+using static CryptoTrader.Utils;
 using System.Windows.Shapes;
 
 namespace CryptoTrader.UserControls
@@ -33,12 +32,12 @@ namespace CryptoTrader.UserControls
 
         private double zoomFactor = 2;
 
-        private bool movingChart = false;
+        private bool movingObjectsWithMouse = false;
         private Point cursorPosition = new Point();
 
         private double lowestPrice, highestPrice;
 
-        private LiveData liveData = null;
+        private LivePriceData livePriceData = null;
         private TradeHelper realTimeTrades = null;
 
         public string Symbol { get { return (string)symbolsPanel.Tag; } }
@@ -70,7 +69,7 @@ namespace CryptoTrader.UserControls
             realRedBrush.Freeze();
             realGreenBrush.Freeze();
 
-            liveData = new LiveData(ServerDataHandler);
+            livePriceData = new LivePriceData(ServerDataHandler);
         }
 
         public void SwitchData(string newSymbol, string newInterval, RequestType requestType)
@@ -81,7 +80,7 @@ namespace CryptoTrader.UserControls
                 {
                     // clear view
                     klinesView.Children.Clear();
-                    klinesDecoration.Children.Clear();
+
                     dataLoadTime.Text = renderLoadTime.Text = cursorPrice.Text = profitTB.Text = intervalAVG.Text = "";
 
                     if (TradeSimulationChangedEvent != null)
@@ -91,43 +90,69 @@ namespace CryptoTrader.UserControls
                 selectPanelUIOption(symbolsPanel, newSymbol);
                 selectPanelUIOption(intervalsPanel, newInterval);
 
-                liveData.SetSymbolAndInterval(newSymbol, newInterval);
-
                 if (requestType == RequestType.LoadData)
-                    liveData.LoadFromServer();
+                    livePriceData.LoadFromServer(newSymbol, newInterval);
             }
         }
 
-        private void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData)
+        public void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick)
         {
             try
             {
                 this.Dispatcher.Invoke(() =>
                 {
-                    dataLoadTime.Text = string.Format("{0:0} ms", liveData.LastDataLoadTime.TotalMilliseconds);
+                    dataLoadTime.Text = string.Format("{0:0} ms", livePriceData.LastDataLoadTime.TotalMilliseconds);
 
                     lock (viewControlsLock)
                     {
                         if (erasePreviousData)
-                        {
                             klinesView.Children.Clear();
-                            klinesDecoration.Children.Clear();
-                        }
 
-                        if (newKlines != null)
+                        if (isTick == false && klinesView != null)
                         {
+                            // add new klines
                             foreach (var kline in newKlines)
                             {
                                 CandleStick candleStick = new CandleStick(kline);
                                 klinesView.Children.Add(candleStick);
                             }
+
+                            // add target trend lines
+                            IBinanceKline lastKline = newKlines.Last();
+                            List<TrendLine> targetTrendLines = TrendLineHelper.GetTargetLines(TargetROE, Leverage, (double)lastKline.Close, lastKline.CloseTime, Interval);
+                            foreach (var targetTrendLine in targetTrendLines)
+                            {
+                                TrendLineStick trendLineStick = new TrendLineStick(targetTrendLine);
+                                klinesView.Children.Add(trendLineStick);
+                            }
+
+                            // add new trend lines
+                            IEnumerable<TrendLine> trendLines = TrendLineData.LoadTrendLines(Symbol, Interval);
+                            foreach (var trendLine in trendLines)
+                            {
+                                TrendLineStick trendLineStick = new TrendLineStick(trendLine);
+                                klinesView.Children.Add(trendLineStick);
+                            }
                         }
 
-                        if (liveData.IsTick)
+                        if (isTick && newKlines != null)
                         {
+                            // add new klines
+                            foreach (var kline in newKlines)
+                            {
+                                CandleStick candleStick = new CandleStick(kline);
+                                klinesView.Children.Add(candleStick);
+                            }
+
+                            // remove extra klines
                             int maxLines = 500;
-                            if (klinesView.Children.Count > maxLines)
-                                klinesView.Children.RemoveRange(0, klinesView.Children.Count - maxLines);
+                            int candleSticksCount = klinesView.Children.OfType<CandleStick>().Count();
+                            if (candleSticksCount > maxLines)
+                            {
+                                List<CandleStick> removedCSList = klinesView.Children.OfType<CandleStick>().Take(candleSticksCount - maxLines).ToList();
+                                foreach(CandleStick removedCS in removedCSList)
+                                    klinesView.Children.Remove(removedCS);
+                            }
                         }
                     }
 
@@ -141,11 +166,16 @@ namespace CryptoTrader.UserControls
             }
         }
 
-        public void SetTrendReversals(double leverage, double targetROE)
+        public void SetTargetPrice(double leverage, double targetROE)
         {
             this.Leverage = leverage;
             this.TargetROE = targetROE;
-            DrawKLines();
+
+            if (klinesView.Children.Count > 0)
+            {
+                TrendLineHelper.UpdateTargetLines(klinesView, TargetROE, Leverage);
+                DrawKLines();
+            }
         }
 
         public void SetRealTimeTradesList(TradeHelper tradeHelper)
@@ -192,7 +222,6 @@ namespace CryptoTrader.UserControls
         private void setRenderTransform(Matrix matrix, bool resetScale = false)
         {
             klinesView.RenderTransform = new MatrixTransform(matrix);
-            klinesDecoration.RenderTransform = new MatrixTransform(matrix);
 
             if(resetScale)
                 zoomFactor = 2;                       
@@ -202,7 +231,7 @@ namespace CryptoTrader.UserControls
         {
             cursorPrice.Margin = new Thickness(cursorPosition.X + 3, cursorPosition.Y + 3, 0, 0);
             Point klinesViewPosition = Mouse.GetPosition(klinesView);
-            double currentRelativePrice = lowestPrice + (((double)klinesView.ActualHeight - (double)klinesViewPosition.Y) * (highestPrice - lowestPrice) / klinesView.ActualHeight);
+            double currentRelativePrice = lowestPrice + ((klinesView.ActualHeight - klinesViewPosition.Y) * (highestPrice - lowestPrice) / klinesView.ActualHeight);
             cursorPrice.Text = currentRelativePrice.ToString("0.00000");
         }
 
@@ -212,7 +241,6 @@ namespace CryptoTrader.UserControls
             DrawKLines();
         }
 
-        int drawings = 0;
         protected void DrawKLines()
         {
             if (isDrawing)
@@ -229,9 +257,9 @@ namespace CryptoTrader.UserControls
                     return;
                 }
 
-                List<CandleStick> klines = new List<CandleStick>(klinesView.Children.Count);
-                CandleStick firstKline = (CandleStick)klinesView.Children[0];
-                CandleStick lastKline = (CandleStick)klinesView.Children[klinesView.Children.Count - 1];
+                List<CandleStick> klines = klinesView.Children.OfType<CandleStick>().ToList();
+                CandleStick firstKline = klines[0];
+                CandleStick lastKline = klines[klines.Count - 1];
                 double viewWidth = klinesView.ActualWidth;
                 double viewHeight = klinesView.ActualHeight;
                 decimal averageFluctuationPerCandlestick = 0;
@@ -240,16 +268,14 @@ namespace CryptoTrader.UserControls
                 highestPrice = 0;
 
                 // initial calculations
-                foreach (CandleStick candleStick in klinesView.Children)
+                foreach (CandleStick candleStick in klines)
                 {
-                    klines.Add(candleStick);
-
                     candleStick.RestoreToOriginal(); // make sure we restore candlestick to original values
 
                     if (candleStick.Low < lowestPrice) lowestPrice = candleStick.Low;
                     if (candleStick.High > highestPrice) highestPrice = candleStick.High;
 
-                    averageFluctuationPerCandlestick += (candleStick.OriginalKLine.High / klinesView.Children.Count - candleStick.OriginalKLine.Low / klinesView.Children.Count);
+                    averageFluctuationPerCandlestick += (candleStick.OriginalKLine.High / klines.Count - candleStick.OriginalKLine.Low / klines.Count);
                 }
 
                 reversal = (double)(averageFluctuationPerCandlestick / lastKline.OriginalKLine.Close) * 4 * 100;
@@ -364,25 +390,13 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // add decorative lines
-                klinesDecoration.Children.Clear();
-
-                double targetPrice = ((TargetROE / Leverage) / 100d) * lastKline.Close;
-                double longClose = Utils.CalculateViewHeight(viewHeight, lowestPrice, highestPrice, lastKline.Close + targetPrice);
-                double shortClose = Utils.CalculateViewHeight(viewHeight, lowestPrice, highestPrice, lastKline.Close - targetPrice);
-
-                Line line = new Line() { X1 = viewWidth - 20, Y1 = viewHeight - lastKline.ViewClose, X2 = viewWidth, Y2 = viewHeight - lastKline.ViewClose };
-                line.StrokeThickness = 1;
-                line.Stroke = Brushes.Orange;
-                klinesDecoration.Children.Add(line);
-                line = new Line() { X1 = viewWidth - 20, Y1 = viewHeight - longClose, X2 = viewWidth, Y2 = viewHeight - longClose };
-                line.StrokeThickness = 2;
-                line.Stroke = greenBrush;
-                klinesDecoration.Children.Add(line);
-                line = new Line() { X1 = viewWidth - 20, Y1 = viewHeight - shortClose, X2 = viewWidth, Y2 = viewHeight - shortClose };
-                line.StrokeThickness = 2;
-                line.Stroke = redBrush;
-                klinesDecoration.Children.Add(line);
+                // draw trend lines
+                List<TrendLineStick> tlines = klinesView.Children.OfType<TrendLineStick>().ToList();
+                foreach (TrendLineStick trendLine in tlines)
+                {
+                    trendLine.SetPositions(viewWidth, viewHeight);
+                    trendLine.Fill(trendLine.Up ? greenBrush : redBrush);
+                }
 
                 // display parameters
                 udCandleType.ToolTip = string.Format("{0:0.00} %", reversal);
@@ -446,40 +460,66 @@ namespace CryptoTrader.UserControls
             cursorPrice.Text = "";
         }
 
+        private void klinesView_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            string selectedTool = (string)toolsPanel.Tag;
+
+            if (selectedTool != null)
+            {
+                if (e.ChangedButton == MouseButton.Left)
+                {
+                    TrendLineHelper.MouseDown(selectedTool, klinesView);
+                    movingObjectsWithMouse = true;
+                }
+            }
+
+            if (selectedTool == null)
+            {
+                if (e.ChangedButton == MouseButton.Middle)
+                    livePriceData.LoadFromServer(Symbol, Interval);
+
+                if ((e.ChangedButton == MouseButton.Left || e.ChangedButton == MouseButton.Right) && klinesView.Children.Count == 0)
+                    livePriceData.LoadFromServer(Symbol, Interval);
+
+                if (e.ChangedButton == MouseButton.Left)
+                    movingObjectsWithMouse = true;
+
+                if (e.ChangedButton == MouseButton.Right)
+                    setRenderTransform(Matrix.Identity, true);
+            }
+        }
+
         private void klinesView_PreviewMouseMove(object sender, MouseEventArgs e)
         {
+            string selectedTool = (string)toolsPanel.Tag;
             Point cursorPreviousPosition = cursorPosition;
             cursorPosition = e.GetPosition(mainGrid);
 
-            if (movingChart)
+            if (selectedTool != null && movingObjectsWithMouse)
+                TrendLineHelper.MouseMove(selectedTool, klinesView);
+
+            if (selectedTool == null && movingObjectsWithMouse)
             {
-                Matrix m = klinesView.RenderTransform.Value;                
+                Matrix m = klinesView.RenderTransform.Value;
                 m.Translate(cursorPosition.X - cursorPreviousPosition.X, cursorPosition.Y - cursorPreviousPosition.Y);
                 setRenderTransform(m);
             }
-            
+
             UpdateCursorPrice();
-        }
-
-        private void klinesView_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            liveData.ProcessMouseDownEvents(e, klinesView.Children.Count > 0);
-
-            if (e.ChangedButton == MouseButton.Left)
-            {
-                movingChart = true;
-            }
-
-            if (e.ChangedButton == MouseButton.Right)
-            {
-                setRenderTransform(Matrix.Identity, true);
-            }
         }
 
         private void klinesView_MouseUp(object sender, MouseButtonEventArgs e)
         {
-            if (e.ChangedButton == MouseButton.Left)
-                movingChart = false;
+            string selectedTool = (string)toolsPanel.Tag;
+
+            if (selectedTool != null && e.ChangedButton == MouseButton.Left)
+            {
+                TrendLineHelper.MouseUp(selectedTool, klinesView);
+                movingObjectsWithMouse = false;
+            }
+
+            if (selectedTool == null && e.ChangedButton == MouseButton.Left)
+                movingObjectsWithMouse = false;
         }
 
         private void klinesView_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -544,7 +584,7 @@ namespace CryptoTrader.UserControls
 
         public void SafelyClose()
         {
-            liveData.SafelyClose();
+            livePriceData.SafelyClose();
         }
 
     }

@@ -1,7 +1,7 @@
 ﻿using Binance.Net.Interfaces;
 using System;
 
-namespace CryptoTrader.Code
+namespace CryptoTrader
 {
     public class BinanceKLine : IBinanceKline
     {
