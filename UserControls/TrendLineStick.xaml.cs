@@ -7,7 +7,7 @@ namespace CryptoTrader.UserControls
     {
         public TrendLine OriginalTrendLine { get; private set; }
 
-        public bool Up;
+        public bool Up { get { return OriginalTrendLine.EndPrice >= OriginalTrendLine.StartPrice; } }
 
         private TrendLineStick()
         {
@@ -20,21 +20,20 @@ namespace CryptoTrader.UserControls
             this.OriginalTrendLine = trendLine;
         }
 
-        public void SetPositions(double viewWidth, double viewHeight, double lowestLow, double highestHigh, CandleStick firstKline, CandleStick lastKline)
+        public void SetXPositions(string interval, CandleStick lastKline, double viewWidth, double highestRightX)
         {
-            //double targetPrice = ((TargetROE / Leverage) / 100d) * lastKline.Close;
-            //double longClose = Utils.CalculateViewHeight(viewHeight, lowestPrice, highestPrice, lastKline.Close + targetPrice);
-            //double shortClose = Utils.CalculateViewHeight(viewHeight, lowestPrice, highestPrice, lastKline.Close - targetPrice);
+            double intervalInMinutes = Utils.IntervalInMinutes(interval);
+            double startMinutesFromLastKLine = (lastKline.OriginalKLine.CloseTime - OriginalTrendLine.StartTime).TotalMinutes;
+            double endMinutesFromLastKLine = (lastKline.OriginalKLine.CloseTime - OriginalTrendLine.EndTime).TotalMinutes;
 
-            //X1 = viewWidth - mleft
-            //Y1 = viewHeight - lastKline.ViewClose
-            //X2 = viewWidth + mright
-            //Y2 = viewHeight - lastKline.ViewClose
+            line.X1 = Utils.CalculateViewWidth(viewWidth, 0, highestRightX, highestRightX - (startMinutesFromLastKLine / intervalInMinutes));
+            line.X2 = Utils.CalculateViewWidth(viewWidth, 0, highestRightX, highestRightX - (endMinutesFromLastKLine / intervalInMinutes));
+        }
 
-            line.Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, OriginalTrendLine.StartPrice);
-            line.Y2 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, OriginalTrendLine.EndPrice);
-            line.X1 = 0;
-            line.X2 = viewWidth;
+        public void SetYPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)
+        {
+            line.Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, OriginalTrendLine.StartPrice);
+            line.Y2 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, OriginalTrendLine.EndPrice);
         }
 
         public void Fill(Brush brush)

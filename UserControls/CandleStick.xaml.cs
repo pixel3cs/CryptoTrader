@@ -8,8 +8,11 @@ namespace CryptoTrader.UserControls
 {
     public partial class CandleStick : UserControl
     {
-        public double Low, High, Open, Close;
         public IBinanceKline OriginalKLine { get; private set; }
+        public double Low { get { return (double)OriginalKLine.Low; } }
+        public double High { get { return (double)OriginalKLine.High; } }
+        public double Open { get { return (double)OriginalKLine.Open; } }
+        public double Close { get { return (double)OriginalKLine.Close; } }
         public bool Up { get { return this.Close >= this.Open; } }
         public bool Down { get { return this.Close < this.Open; } }
 
@@ -22,32 +25,28 @@ namespace CryptoTrader.UserControls
         {
             InitializeComponent();
             this.OriginalKLine = kline;
-            this.Close = (double)kline.Close;
-            this.Open = (double)kline.Open;
-            this.High = (double)kline.High;
-            this.Low = (double)kline.Low;
         }
 
-        public void CalculateHeikinAshi(CandleStick prevCandleStick)
-        {
-            this.Close = (double)(OriginalKLine.Open + OriginalKLine.Close + OriginalKLine.Low + OriginalKLine.High) / 4d;
-            this.Open = (double)(prevCandleStick.Open + prevCandleStick.Close) / 2d;
-            this.High = Math.Max(Math.Max((double)OriginalKLine.High, this.Open), this.Close);
-            this.Low = Math.Min(Math.Min((double)OriginalKLine.Low, this.Open), this.Close);
-        }
+        //public void CalculateHeikinAshi(CandleStick prevCandleStick)
+        //{
+        //    this.Close = (double)(OriginalKLine.Open + OriginalKLine.Close + OriginalKLine.Low + OriginalKLine.High) / 4d;
+        //    this.Open = (double)(prevCandleStick.Open + prevCandleStick.Close) / 2d;
+        //    this.High = Math.Max(Math.Max((double)OriginalKLine.High, this.Open), this.Close);
+        //    this.Low = Math.Min(Math.Min((double)OriginalKLine.Low, this.Open), this.Close);
+        //}
 
-        public void RestoreToOriginal()
-        {
-            this.Close = (double)OriginalKLine.Close;
-            this.Open = (double)OriginalKLine.Open;
-            this.High = (double)OriginalKLine.High;
-            this.Low = (double)OriginalKLine.Low;
-        }
+        //public void RestoreToOriginal()
+        //{
+        //    this.Close = (double)OriginalKLine.Close;
+        //    this.Open = (double)OriginalKLine.Open;
+        //    this.High = (double)OriginalKLine.High;
+        //    this.Low = (double)OriginalKLine.Low;
+        //}
 
-        public void SetWidthPositions(double viewWidth, double lowestLeft, double highestRight, double xPosition)
+        public void SetWidthPositions(double viewWidth, double lowestLeftX, double highestRightX, double xPosition)
         {
-            double xViewLeft = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, xPosition + 0.25d);
-            double xViewRight = Utils.CalculateViewWidth(viewWidth, lowestLeft, highestRight, xPosition + 1d);
+            double xViewLeft = Utils.CalculateViewWidth(viewWidth, lowestLeftX, highestRightX, xPosition + 0.25d);
+            double xViewRight = Utils.CalculateViewWidth(viewWidth, lowestLeftX, highestRightX, xPosition + 1d);
             
             Canvas.SetLeft(this, xViewLeft);
             this.Width = Math.Abs(xViewRight - xViewLeft);
@@ -55,15 +54,15 @@ namespace CryptoTrader.UserControls
 
         //private static double lastY = 0;
         //private static CandleStick lastC = null;
-        public void SetHeightPositions(double viewHeight, double lowestLow, double highestHigh)
+        public void SetHeightPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)
         {
             //if (lastC != null && (this.Up != lastC.Up))
             //    lastY = 0;
 
-            double ViewHigh = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.High);
-            double ViewLow = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Low);
-            double ViewOpen = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Open);
-            double ViewClose = Utils.CalculateViewHeight(viewHeight, lowestLow, highestHigh, this.Close);
+            double ViewHigh = Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, this.High);
+            double ViewLow = Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, this.Low);
+            double ViewOpen = Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, this.Open);
+            double ViewClose = Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, this.Close);
 
             Canvas.SetTop(this, viewHeight - ViewHigh);
             this.Height = ViewHigh - ViewLow;

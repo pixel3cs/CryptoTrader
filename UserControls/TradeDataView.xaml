@@ -14,7 +14,6 @@
             <StackPanel x:Name="candelTypesPanel" Tag="TA" Orientation="Horizontal">
                 <TextBlock Text="TA" Style="{StaticResource ResourceKey=ChooseDisplayStyleSelected}" MouseDown="selectCandleType_MouseDown"/>
                 <TextBlock Text="UD%" x:Name="udCandleType" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
-                <TextBlock Text="HA" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
                 <TextBlock Text="BAR" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
                 <TextBlock Text="VOL" Style="{StaticResource ResourceKey=ChooseDisplayStyle}" MouseDown="selectCandleType_MouseDown"/>
             </StackPanel>

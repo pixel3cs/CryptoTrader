@@ -1,4 +1,5 @@
-﻿using Binance.Net.Interfaces;
+﻿using Binance.Net.Enums;
+using Binance.Net.Interfaces;
 using Binance.Net.Objects.Spot.MarketStream;
 using System.Collections.Generic;
 
@@ -41,16 +42,16 @@ namespace CryptoTrader
             TargetShort
         }
 
-        public static double CalculateViewWidth(double viewWidth, double lowestLeft, double highestRight, double priceWidth)
+        public static double CalculateViewWidth(double viewWidth, double lowestLeftX, double highestRightX, double xPosition)
         {
-            if (highestRight == lowestLeft) return 0;
-            return ((priceWidth - lowestLeft) * viewWidth) / (highestRight - lowestLeft);
+            if (highestRightX == lowestLeftX) return 0;
+            return ((xPosition - lowestLeftX) * viewWidth) / (highestRightX - lowestLeftX);
         }
 
-        public static double CalculateViewHeight(double viewHeight, double lowestLow, double highestHigh, double priceHeight)
+        public static double CalculateViewHeight(double viewHeight, double lowestPrice, double highestPrice, double price)
         {
-            if (highestHigh == lowestLow) return 0;
-            return ((priceHeight - lowestLow) * viewHeight) / (highestHigh - lowestLow);
+            if (highestPrice == lowestPrice) return 0;
+            return ((price - lowestPrice) * viewHeight) / (highestPrice - lowestPrice);
         }
 
         public static int IntervalInMinutes(string interval)
@@ -70,6 +71,25 @@ namespace CryptoTrader
                 default: return 0;
             }
         }
+
+        public static KlineInterval ToKlineInterval(string interval)
+        {
+            switch (interval)
+            {
+                case "1m": return KlineInterval.OneMinute;
+                case "3m": return KlineInterval.ThreeMinutes;
+                case "5m": return KlineInterval.FiveMinutes;
+                case "15m": return KlineInterval.FifteenMinutes;
+                case "30m": return KlineInterval.ThirtyMinutes;
+                case "1h": return KlineInterval.OneHour;
+                case "2h": return KlineInterval.TwoHour;
+                case "4h": return KlineInterval.FourHour;
+                case "12h": return KlineInterval.TwelveHour;
+                case "1d": return KlineInterval.OneDay;
+                default: return KlineInterval.OneMinute;
+            }
+        }
+
     }
 
     

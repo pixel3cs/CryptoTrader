@@ -39,22 +39,7 @@ namespace CryptoTrader
             string symbol = strParams[0];
             string interval = strParams[1];
             bool isTick = (interval == "tick" || interval.EndsWith("s"));
-
-            KlineInterval klineInterval;
-            switch (interval)
-            {
-                case "1m": klineInterval = KlineInterval.OneMinute; break;
-                case "3m": klineInterval = KlineInterval.ThreeMinutes; break;
-                case "5m": klineInterval = KlineInterval.FiveMinutes; break;
-                case "15m": klineInterval = KlineInterval.FifteenMinutes; break;
-                case "30m": klineInterval = KlineInterval.ThirtyMinutes; break;
-                case "1h": klineInterval = KlineInterval.OneHour; break;
-                case "2h": klineInterval = KlineInterval.TwoHour; break;
-                case "4h": klineInterval = KlineInterval.FourHour; break;
-                case "12h": klineInterval = KlineInterval.TwelveHour; break;
-                case "1d": klineInterval = KlineInterval.OneDay; break;
-                default: klineInterval = KlineInterval.OneMinute; break;
-            }
+            KlineInterval klineInterval = Utils.ToKlineInterval(interval);
 
             // load data
             DateTime dateStart = DateTime.Now;

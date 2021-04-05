@@ -3,7 +3,9 @@ using CryptoTrader.UserControls;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using static CryptoTrader.Utils;
 
 namespace CryptoTrader
@@ -12,26 +14,52 @@ namespace CryptoTrader
     {
         private static TrendLine drawingLine = null;
 
-        public static void MouseDown(string selectedTool, Canvas klinesView)
+        public static TrendLine MouseDown(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
         {
             if (drawingLine != null)
-                return;
+                return null;
 
             if (selectedTool == "trendline")
             {
                 drawingLine = new TrendLine();
+                drawingLine.LineType = Utils.TrendLineType.Normal.ToString();
+                drawingLine.ForSaving = true;
+                drawingLine.StartPrice = drawingLine.EndPrice = priceAtCursorPosition;
 
+                Point klinesViewPosition = Mouse.GetPosition(klinesView);
+                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+
+                drawingLine.StartTime = drawingLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                return drawingLine;
             }
+
+            return null;
         }
 
-        public static void MouseMove(string selectedTool, Canvas klinesView)
+        public static bool MouseMove(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
         {
+            if (drawingLine == null)
+                return false;
 
+            if (selectedTool == "trendline")
+            {
+                Point klinesViewPosition = Mouse.GetPosition(klinesView);
+                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+
+                drawingLine.EndPrice = priceAtCursorPosition;
+                drawingLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                return true;
+            }
+
+            return false;
         }
 
-        public static void MouseUp(string selectedTool, Canvas klinesView)
+        public static void MouseUp(string selectedTool)
         {
+            if (drawingLine == null)
+                return;
 
+            drawingLine = null;
         }
 
         public static List<TrendLine> GetTargetLines(string interval, double targetMovePercent, IBinanceKline lastKline)
