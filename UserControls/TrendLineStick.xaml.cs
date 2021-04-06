@@ -1,5 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
+using static CryptoTrader.Utils;
 
 namespace CryptoTrader.UserControls
 {
@@ -20,14 +22,10 @@ namespace CryptoTrader.UserControls
             this.OriginalTrendLine = trendLine;
         }
 
-        public void SetXPositions(string interval, CandleStick lastKline, double viewWidth, double highestRightX)
+        public void SetXPositions(double viewWidth, CandleStick firstKline, CandleStick lastKline)
         {
-            double intervalInMinutes = Utils.IntervalInMinutes(interval);
-            double startMinutesFromLastKLine = (lastKline.OriginalKLine.CloseTime - OriginalTrendLine.StartTime).TotalMinutes;
-            double endMinutesFromLastKLine = (lastKline.OriginalKLine.CloseTime - OriginalTrendLine.EndTime).TotalMinutes;
-
-            line.X1 = Utils.CalculateViewWidth(viewWidth, 0, highestRightX, highestRightX - (startMinutesFromLastKLine / intervalInMinutes));
-            line.X2 = Utils.CalculateViewWidth(viewWidth, 0, highestRightX, highestRightX - (endMinutesFromLastKLine / intervalInMinutes));
+            line.X1 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.CloseTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OriginalTrendLine.StartTime.Ticks);
+            line.X2 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.CloseTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OriginalTrendLine.EndTime.Ticks);
         }
 
         public void SetYPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)
@@ -36,9 +34,29 @@ namespace CryptoTrader.UserControls
             line.Y2 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, OriginalTrendLine.EndPrice);
         }
 
-        public void Fill(Brush brush)
+        public void Fill(Brush greenBrush, Brush redBrush)
         {
-            line.Stroke = brush;
+            if (OriginalTrendLine.LineType == TrendLineType.Normal.ToString())
+            {
+                line.Stroke = this.Up ? greenBrush : redBrush;
+            }
+            else
+            {
+                if (OriginalTrendLine.LineType == TrendLineType.TargetLong.ToString()) line.Stroke = greenBrush;
+                if (OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString()) line.Stroke = Brushes.Orange;
+                if (OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString()) line.Stroke = redBrush;
+            }
         }
+
+        public bool IsNearStart(Point point, int nearDistnace)
+        {
+            return ((point.X - line.X1) * (point.X - line.X1) + (point.Y - line.Y1) * (point.Y - line.Y1)) < nearDistnace * nearDistnace;
+        }
+
+        public bool IsNearEnd(Point point, int nearDistnace)
+        {
+            return ((point.X - line.X2) * (point.X - line.X2) + (point.Y - line.Y2) * (point.Y - line.Y2)) < nearDistnace * nearDistnace;
+        }
+
     }
 }

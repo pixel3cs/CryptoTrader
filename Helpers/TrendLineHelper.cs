@@ -12,55 +12,9 @@ namespace CryptoTrader
 {
     public class TrendLineHelper
     {
-        private static TrendLine drawingLine = null;
-
-        public static TrendLine MouseDown(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
-        {
-            if (drawingLine != null)
-                return null;
-
-            if (selectedTool == "trendline")
-            {
-                drawingLine = new TrendLine();
-                drawingLine.LineType = Utils.TrendLineType.Normal.ToString();
-                drawingLine.ForSaving = true;
-                drawingLine.StartPrice = drawingLine.EndPrice = priceAtCursorPosition;
-
-                Point klinesViewPosition = Mouse.GetPosition(klinesView);
-                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
-
-                drawingLine.StartTime = drawingLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
-                return drawingLine;
-            }
-
-            return null;
-        }
-
-        public static bool MouseMove(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
-        {
-            if (drawingLine == null)
-                return false;
-
-            if (selectedTool == "trendline")
-            {
-                Point klinesViewPosition = Mouse.GetPosition(klinesView);
-                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
-
-                drawingLine.EndPrice = priceAtCursorPosition;
-                drawingLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
-                return true;
-            }
-
-            return false;
-        }
-
-        public static void MouseUp(string selectedTool)
-        {
-            if (drawingLine == null)
-                return;
-
-            drawingLine = null;
-        }
+        private static TrendLineStick movingLine = null;
+        private static bool movingStartPoint = false;
+        private static int nearDistance = 15; // pixels
 
         public static List<TrendLine> GetTargetLines(string interval, double targetMovePercent, IBinanceKline lastKline)
         {
@@ -113,6 +67,98 @@ namespace CryptoTrader
 
             TrendLineStick tlShort = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlShort.OriginalTrendLine.StartPrice = tlShort.OriginalTrendLine.EndPrice = closePrice - targetPrice;
+        }
+
+        public static TrendLineStick MouseDown(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
+        {
+            if (movingLine != null)
+                return null;
+
+            if (selectedTool == "trendline")
+            {
+                TrendLine trendLine = new TrendLine();
+                trendLine.LineType = Utils.TrendLineType.Normal.ToString();
+                trendLine.ForSaving = true;
+                trendLine.StartPrice = trendLine.EndPrice = priceAtCursorPosition;
+
+                Point klinesViewPosition = Mouse.GetPosition(klinesView);
+                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+
+                trendLine.StartTime = trendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                movingStartPoint = false;
+
+                movingLine = new TrendLineStick(trendLine);
+                klinesView.Children.Add(movingLine);
+
+                return movingLine;
+            }
+
+            return null;
+        }
+
+        public static void MouseDownOnLine(TrendLineStick tls, Canvas klinesView)
+        {
+            Point klinesViewPosition = Mouse.GetPosition(klinesView);
+            movingStartPoint = tls.IsNearStart(klinesViewPosition, nearDistance);
+            movingLine = tls;
+        }
+
+        public static TrendLineStick MouseMove(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
+        {
+            if (movingLine == null)
+                return null;
+
+            if (selectedTool == "trendline")
+            {
+                Point klinesViewPosition = Mouse.GetPosition(klinesView);
+                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+
+                if (movingStartPoint)
+                {
+                    movingLine.OriginalTrendLine.StartPrice = priceAtCursorPosition;
+                    movingLine.OriginalTrendLine.StartTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                }
+                else
+                {
+                    movingLine.OriginalTrendLine.EndPrice = priceAtCursorPosition;
+                    movingLine.OriginalTrendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                }
+
+                return movingLine;
+            }
+
+            return null;
+        }
+
+        public static void MouseUp(string selectedTool, Canvas klinesView)
+        {
+            if (movingLine == null)
+                return;
+
+            Point startPoint = new Point(movingLine.line.X1, movingLine.line.Y1);
+            if (movingLine.IsNearEnd(startPoint, nearDistance)) // remove line if it's too short (double click or accidental line)
+                RemoveTrendLine(movingLine, klinesView);
+
+            movingLine = null;
+        }
+
+        public static TrendLineStick TrendLineNearMouse(Canvas klinesView)
+        {
+            Point klinesViewPosition = Mouse.GetPosition(klinesView);
+
+            TrendLineStick trendLineStick = klinesView.Children.OfType<TrendLineStick>().Where(tls => 
+                    tls.OriginalTrendLine.LineType == Utils.TrendLineType.Normal.ToString() &&
+                    (
+                        tls.IsNearStart(klinesViewPosition, nearDistance) || 
+                        tls.IsNearEnd(klinesViewPosition, nearDistance))
+                    ).FirstOrDefault();
+
+            return trendLineStick;
+        }
+
+        public static void RemoveTrendLine(TrendLineStick tls, Canvas klinesView)
+        {
+            klinesView.Children.Remove(tls);
         }
 
     }
