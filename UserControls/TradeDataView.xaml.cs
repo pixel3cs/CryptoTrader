@@ -99,7 +99,7 @@ namespace CryptoTrader.UserControls
         public void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick)
         {
             try
-            {
+            {                
                 this.Dispatcher.Invoke(() =>
                 {
                     dataLoadTime.Text = string.Format("{0:0} ms", livePriceData.LastDataLoadTime.TotalMilliseconds);
@@ -116,11 +116,11 @@ namespace CryptoTrader.UserControls
                                 klinesView.Children.Add(new CandleStick(kline));
 
                             // add target trend lines
-                            foreach (var targetTrendLine in TrendLineHelper.GetTargetLines(Interval, TargetMovePercent, newKlines.Last()))
+                            foreach (var targetTrendLine in TrendLineHelper.GetTempTargetLines(Interval, TargetMovePercent, newKlines.Last()))
                                 klinesView.Children.Add(new TrendLineStick(targetTrendLine));
 
                             // add new trend lines
-                            foreach (var trendLine in TrendLineData.LoadTrendLines(Symbol, Interval))
+                            foreach (var trendLine in TrendLineData.LoadFromDisk(Symbol, Interval))
                                 klinesView.Children.Add(new TrendLineStick(trendLine));
                         }
 
@@ -144,7 +144,7 @@ namespace CryptoTrader.UserControls
 
                     setRenderTransform(Matrix.Identity, true);
 
-                    DrawKLines();
+                    DrawKLines(); // when new data is loaded
                 });
             }
             catch
@@ -158,8 +158,8 @@ namespace CryptoTrader.UserControls
 
             if (klinesView.Children.Count > 0)
             {
-                TrendLineHelper.UpdateTargetLines(klinesView, targetMovePercent);
-                DrawKLines();
+                TrendLineHelper.UpdateTempTargetLines(klinesView, targetMovePercent);
+                DrawKLines(); // when target price is changed (target lines need redrawing)
             }
         }
 
@@ -227,7 +227,7 @@ namespace CryptoTrader.UserControls
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
         {
             base.OnRenderSizeChanged(sizeInfo);
-            DrawKLines();
+            DrawKLines(); // on windows resize
         }
 
         protected void DrawKLines()
@@ -368,6 +368,10 @@ namespace CryptoTrader.UserControls
                 {
                     foreach (CandleStick candleStick in klines)
                     {
+                        // find distance from candleStick[High] to each trendLine
+                        // take the closest trendLine
+                        // calculate color based on 0/+1/-1 [position = sign((Bx - Ax) * (Y - Ay) - (By - Ay) * (X - Ax))]
+                        //  keep color if position[High] != position[Low]
                         candleStick.Fill(candleStick.Up ? greenBrush : redBrush);
                     }
                 }
@@ -404,7 +408,7 @@ namespace CryptoTrader.UserControls
             e.Handled = true;
             TextBlock tbSender = sender as TextBlock;
             selectPanelUIOption(candelTypesPanel, tbSender.Text);
-            DrawKLines();
+            DrawKLines(); // when CandleType is changed (colors are changed)
         }
 
         private void selectTool_MouseDown(object sender, MouseButtonEventArgs e)
@@ -429,6 +433,15 @@ namespace CryptoTrader.UserControls
                 tbSender.Style = (Style)FindResource("ChooseToolStyle");
                 this.Cursor = Cursors.Cross;
             }
+
+            string selectedTool = (string)toolsPanel.Tag;
+            if(selectedTool == "savemark" && klinesView.Children.Count > 0)
+            {
+                TrendLineHelper.KeepTempTargetLines(klinesView);
+                TrendLineData.SaveToDisk(klinesView, Symbol, Interval); // when temp target lines are keep
+                MessageBox.Show("Target lines have been saved.", Application.ResourceAssembly.GetName().Name, MessageBoxButton.OK, MessageBoxImage.Information);
+                selectTool_MouseDown(sender, e); // deselect                
+            }
         }
 
         private void klinesView_MouseLeave(object sender, MouseEventArgs e)
@@ -448,7 +461,7 @@ namespace CryptoTrader.UserControls
                 {
                     TrendLineHelper.MouseDownOnLine(nearTLS, klinesView);
                     movingLineWithMouse = true;
-                    klinesView_PreviewMouseMove(null, e);
+                    klinesView_PreviewMouseMove(null, e); // update line position to cursor
                 }
 
                 if (e.ChangedButton == MouseButton.Left && nearTLS == null) // Left + no line
@@ -461,7 +474,10 @@ namespace CryptoTrader.UserControls
                     movingChartWithMouse = true;
 
                 if (e.ChangedButton == MouseButton.Right && nearTLS != null) // Right + near line
+                {
                     TrendLineHelper.RemoveTrendLine(nearTLS, klinesView);
+                    TrendLineData.SaveToDisk(klinesView, Symbol, Interval); // when a trend line is removed
+                }
 
                 if (e.ChangedButton == MouseButton.Right && nearTLS == null) // Right + no line
                     setRenderTransform(Matrix.Identity, true);
@@ -534,9 +550,11 @@ namespace CryptoTrader.UserControls
             {
                 if (e.ChangedButton == MouseButton.Left)
                 {
-                    TrendLineHelper.MouseUp(selectedTool, klinesView);
+                    bool lineMoved = TrendLineHelper.MouseUp(selectedTool, klinesView);
+                    if(lineMoved)
+                        TrendLineData.SaveToDisk(klinesView, Symbol, Interval); // when mouse is up and a new line is completed/updated
                     movingLineWithMouse = false;
-                    klinesView_PreviewMouseMove(null, e);
+                    klinesView_PreviewMouseMove(null, e); // update mouse cursor
                 }
 
                 if(e.ChangedButton == MouseButton.Middle)

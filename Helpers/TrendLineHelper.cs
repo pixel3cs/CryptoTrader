@@ -1,7 +1,9 @@
 ﻿using Binance.Net.Interfaces;
 using CryptoTrader.UserControls;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,7 +18,7 @@ namespace CryptoTrader
         private static bool movingStartPoint = false;
         private static int nearDistance = 15; // pixels
 
-        public static List<TrendLine> GetTargetLines(string interval, double targetMovePercent, IBinanceKline lastKline)
+        public static List<TrendLine> GetTempTargetLines(string interval, double targetMovePercent, IBinanceKline lastKline)
         {
             int intervalInMinutes = Utils.IntervalInMinutes(interval);
             double closePrice = (double)lastKline.Close;
@@ -57,7 +59,7 @@ namespace CryptoTrader
             return new List<TrendLine> { longTrendLine, currentTrendLine, shortTrendLine };
         }
 
-        public static void UpdateTargetLines(Canvas klinesView, double targetMovePercent)
+        public static void UpdateTempTargetLines(Canvas klinesView, double targetMovePercent)
         {
             double closePrice = (double)klinesView.Children.OfType<CandleStick>().Last().OriginalKLine.Close;
             double targetPrice = (targetMovePercent / 100d) * closePrice;
@@ -67,6 +69,21 @@ namespace CryptoTrader
 
             TrendLineStick tlShort = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlShort.OriginalTrendLine.StartPrice = tlShort.OriginalTrendLine.EndPrice = closePrice - targetPrice;
+        }
+
+        public static void KeepTempTargetLines(Canvas klinesView)
+        {
+            TrendLineStick tlLong = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetLong.ToString() && tl.OriginalTrendLine.ForSaving == false);
+            TrendLineStick tlNormal = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString() && tl.OriginalTrendLine.ForSaving == false);
+            TrendLineStick tlShort = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString() && tl.OriginalTrendLine.ForSaving == false);
+
+            tlLong = new TrendLineStick(tlLong.OriginalTrendLine.Clone(true));
+            tlNormal = new TrendLineStick(tlNormal.OriginalTrendLine.Clone(true));
+            tlShort = new TrendLineStick(tlShort.OriginalTrendLine.Clone(true));
+
+            klinesView.Children.Add(tlLong);
+            klinesView.Children.Add(tlNormal);
+            klinesView.Children.Add(tlShort);
         }
 
         public static TrendLineStick MouseDown(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
@@ -130,16 +147,21 @@ namespace CryptoTrader
             return null;
         }
 
-        public static void MouseUp(string selectedTool, Canvas klinesView)
+        public static bool MouseUp(string selectedTool, Canvas klinesView)
         {
             if (movingLine == null)
-                return;
+                return false;
 
             Point startPoint = new Point(movingLine.line.X1, movingLine.line.Y1);
             if (movingLine.IsNearEnd(startPoint, nearDistance)) // remove line if it's too short (double click or accidental line)
-                RemoveTrendLine(movingLine, klinesView);
+            {
+                klinesView.Children.Remove(movingLine);
+                movingLine = null;
+                return false;
+            }
 
             movingLine = null;
+            return true;
         }
 
         public static TrendLineStick TrendLineNearMouse(Canvas klinesView)
@@ -147,7 +169,7 @@ namespace CryptoTrader
             Point klinesViewPosition = Mouse.GetPosition(klinesView);
 
             TrendLineStick trendLineStick = klinesView.Children.OfType<TrendLineStick>().Where(tls => 
-                    tls.OriginalTrendLine.LineType == Utils.TrendLineType.Normal.ToString() &&
+                    tls.OriginalTrendLine.ForSaving &&
                     (
                         tls.IsNearStart(klinesViewPosition, nearDistance) || 
                         tls.IsNearEnd(klinesViewPosition, nearDistance))
@@ -160,6 +182,8 @@ namespace CryptoTrader
         {
             klinesView.Children.Remove(tls);
         }
+
+
 
     }
 }

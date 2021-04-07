@@ -20,5 +20,16 @@ namespace CryptoTrader
         public bool ForSaving;
         public string LineType;
 
+        public TrendLine Clone(bool forSaving)
+        {
+            TrendLine trendLine = new TrendLine();
+            trendLine.StartPrice = this.StartPrice;
+            trendLine.StartTime = this.StartTime;
+            trendLine.EndPrice = this.EndPrice;
+            trendLine.EndTime = this.EndTime;
+            trendLine.LineType = this.LineType;
+            trendLine.ForSaving = forSaving;
+            return trendLine;
+        }
     }
 }

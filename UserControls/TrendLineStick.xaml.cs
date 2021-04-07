@@ -46,6 +46,9 @@ namespace CryptoTrader.UserControls
                 if (OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString()) line.Stroke = Brushes.Orange;
                 if (OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString()) line.Stroke = redBrush;
             }
+
+            if (OriginalTrendLine.ForSaving == false)
+                line.StrokeDashArray = new DoubleCollection(new double[] { 2, 1 });
         }
 
         public bool IsNearStart(Point point, int nearDistnace)

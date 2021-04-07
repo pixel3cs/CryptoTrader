@@ -19,6 +19,7 @@
             </StackPanel>
 
             <StackPanel x:Name="toolsPanel" Orientation="Horizontal" Margin="5,0,0,0">
+                <TextBlock Text="&#8251;" Tag="savemark" Foreground="#FFB27F" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="selectTool_MouseDown"/>
                 <TextBlock Text="&#129149;" Tag="trendline" Foreground="#55dd55" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="selectTool_MouseDown"/>
             </StackPanel>
         </StackPanel>
