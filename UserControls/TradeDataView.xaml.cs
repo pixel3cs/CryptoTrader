@@ -33,7 +33,7 @@ namespace CryptoTrader.UserControls
         private double zoomFactor = 2;
 
         private bool movingLineWithMouse = false, movingChartWithMouse = false;
-        private Point cursorPosition = new Point();
+        private Point cursorPosition = new Point(), moveStartPosition = new Point();
         private double priceAtCursorPosition = 0;
 
         private double lowestLowPrice, highestHighPrice;
@@ -368,11 +368,56 @@ namespace CryptoTrader.UserControls
                 {
                     foreach (CandleStick candleStick in klines)
                     {
-                        // find distance from candleStick[High] to each trendLine
-                        // take the closest trendLine
-                        // calculate color based on 0/+1/-1 [position = sign((Bx - Ax) * (Y - Ay) - (By - Ay) * (X - Ax))]
-                        //  keep color if position[High] != position[Low]
-                        candleStick.Fill(candleStick.Up ? greenBrush : redBrush);
+                        double csX = Canvas.GetLeft(candleStick);
+
+                        // take the corresponding trend line (candle stick between its positions)
+                        TrendLineStick[] tlsList = tlines.Where(tl => csX >= tl.line.X1 && csX <= tl.line.X2 &&
+                            tl.OriginalTrendLine.LineType == TrendLineType.Normal.ToString()).ToArray();
+
+                        if (tlsList != null && tlsList.Length > 0)
+                        {
+                            TrendLineStick tls = (tlsList.Length == 1) ? tlsList[0] : null;
+
+                            // if there are more trend lines, take the most suitable one
+                            if (tls == null)
+                            {
+                                int upTlsCount = tlsList.Where(tl => tl.Up == true).Count();
+                                int downTlsCount = tlsList.Where(tl => tl.Up == false).Count();
+
+                                // if there are more trend lines with different positions, take the most left one
+                                if (upTlsCount > 0 && downTlsCount > 0)
+                                    tls = tlsList.OrderBy(tl => tl.line.X1).FirstOrDefault();
+
+                                // if there are only up trend lines, take the lowest one
+                                if (upTlsCount > 0 && downTlsCount == 0)
+                                    tls = tlsList.OrderByDescending(tl => tl.line.Y1).FirstOrDefault();
+
+                                // if there are only down trend lines, take the highest one
+                                if (upTlsCount == 0 && downTlsCount > 0)
+                                    tls = tlsList.OrderBy(tl => tl.line.Y1).FirstOrDefault();
+                            }
+
+                            // find distance from candleStick to trend line
+                            double csHighY = Canvas.GetTop(candleStick);
+                            double csLowY = csHighY + candleStick.Height;
+                            double distanceHigh = tls.DistanceToPoint(csX, csHighY); // distance to cs.High
+                            double distanceLow = tls.DistanceToPoint(csX, csLowY); // distance to cs.Low
+                            double distance = tls.Up ? distanceHigh : distanceLow;
+
+                            // if candleStick cross the trend line, take the higher distance
+                            if (Math.Sign(distanceHigh) != Math.Sign(distanceLow))
+                            {
+                                if(tls.Up)
+                                    distance = Math.Abs(distanceHigh) / Math.Abs(distanceLow) >= 0.67 ? distanceHigh : distanceLow; // 0.67 = two thirds
+                                else
+                                    distance = Math.Abs(distanceLow) / Math.Abs(distanceHigh) >= 0.67 ? distanceLow : distanceHigh;
+                            }
+
+                            // calculate color based on distance sign: 0/+1/-1
+                            candleStick.Fill(distance < 0 ? greenBrush : redBrush);
+                        }
+                        else
+                            candleStick.Fill(candleStick.Up ? greenBrush : redBrush);
                     }
                 }
 
@@ -413,7 +458,8 @@ namespace CryptoTrader.UserControls
 
         private void selectTool_MouseDown(object sender, MouseButtonEventArgs e)
         {
-            e.Handled = true;
+            if (e != null)
+                e.Handled = true;
 
             foreach (TextBlock tb in toolsPanel.Children)
                 tb.Style = (Style)FindResource("ChooseToolStyle");
@@ -470,17 +516,19 @@ namespace CryptoTrader.UserControls
                     movingLineWithMouse = (tls != null);
                 }
 
-                if (e.ChangedButton == MouseButton.Middle)
-                    movingChartWithMouse = true;
-
                 if (e.ChangedButton == MouseButton.Right && nearTLS != null) // Right + near line
                 {
                     TrendLineHelper.RemoveTrendLine(nearTLS, klinesView);
                     TrendLineData.SaveToDisk(klinesView, Symbol, Interval); // when a trend line is removed
+                    klinesView_PreviewMouseMove(null, e); // update cursor in relation with remaining lines
+                    DrawKLines(); // update candle stick colors after trend line deletion
                 }
 
                 if (e.ChangedButton == MouseButton.Right && nearTLS == null) // Right + no line
-                    setRenderTransform(Matrix.Identity, true);
+                {
+                    moveStartPosition = cursorPosition;
+                    movingChartWithMouse = true;
+                }
             }
 
             if (selectedTool == null)
@@ -551,14 +599,25 @@ namespace CryptoTrader.UserControls
                 if (e.ChangedButton == MouseButton.Left)
                 {
                     bool lineMoved = TrendLineHelper.MouseUp(selectedTool, klinesView);
-                    if(lineMoved)
+                    if (lineMoved)
+                    {
                         TrendLineData.SaveToDisk(klinesView, Symbol, Interval); // when mouse is up and a new line is completed/updated
+                        DrawKLines(); // update candle stick colors after trend line creation/move is ended
+                    }
                     movingLineWithMouse = false;
                     klinesView_PreviewMouseMove(null, e); // update mouse cursor
                 }
 
-                if(e.ChangedButton == MouseButton.Middle)
+                if (e.ChangedButton == MouseButton.Right)
+                {
                     movingChartWithMouse = false;
+
+                    if (Utils.AreClosePoints(moveStartPosition, cursorPosition, Utils.NearDistance))
+                    {
+                        setRenderTransform(Matrix.Identity, true);
+                        selectTool_MouseDown(trendLineTool, null); // deselect trend line tool
+                    }
+                }
             }
 
             if (selectedTool == null && e.ChangedButton == MouseButton.Left)

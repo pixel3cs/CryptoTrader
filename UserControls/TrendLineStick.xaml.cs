@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using static CryptoTrader.Utils;
@@ -56,9 +57,14 @@ namespace CryptoTrader.UserControls
             return ((point.X - line.X1) * (point.X - line.X1) + (point.Y - line.Y1) * (point.Y - line.Y1)) < nearDistnace * nearDistnace;
         }
 
-        public bool IsNearEnd(Point point, int nearDistnace)
+        public bool IsNearEnd(Point point, int nearDistance)
         {
-            return ((point.X - line.X2) * (point.X - line.X2) + (point.Y - line.Y2) * (point.Y - line.Y2)) < nearDistnace * nearDistnace;
+            return ((point.X - line.X2) * (point.X - line.X2) + (point.Y - line.Y2) * (point.Y - line.Y2)) < nearDistance * nearDistance;
+        }
+
+        public double DistanceToPoint(double x, double y)
+        {
+            return (line.X2 - line.X1) * (y - line.Y1) - (line.Y2 - line.Y1) * (x - line.X1);
         }
 
     }

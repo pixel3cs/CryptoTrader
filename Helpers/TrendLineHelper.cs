@@ -15,8 +15,7 @@ namespace CryptoTrader
     public class TrendLineHelper
     {
         private static TrendLineStick movingLine = null;
-        private static bool movingStartPoint = false;
-        private static int nearDistance = 15; // pixels
+        private static bool movingStartPoint = false;        
 
         public static List<TrendLine> GetTempTargetLines(string interval, double targetMovePercent, IBinanceKline lastKline)
         {
@@ -116,7 +115,7 @@ namespace CryptoTrader
         public static void MouseDownOnLine(TrendLineStick tls, Canvas klinesView)
         {
             Point klinesViewPosition = Mouse.GetPosition(klinesView);
-            movingStartPoint = tls.IsNearStart(klinesViewPosition, nearDistance);
+            movingStartPoint = tls.IsNearStart(klinesViewPosition, NearDistance);
             movingLine = tls;
         }
 
@@ -153,7 +152,7 @@ namespace CryptoTrader
                 return false;
 
             Point startPoint = new Point(movingLine.line.X1, movingLine.line.Y1);
-            if (movingLine.IsNearEnd(startPoint, nearDistance)) // remove line if it's too short (double click or accidental line)
+            if (movingLine.IsNearEnd(startPoint, NearDistance)) // remove line if it's too short (double click or accidental line)
             {
                 klinesView.Children.Remove(movingLine);
                 movingLine = null;
@@ -171,8 +170,8 @@ namespace CryptoTrader
             TrendLineStick trendLineStick = klinesView.Children.OfType<TrendLineStick>().Where(tls => 
                     tls.OriginalTrendLine.ForSaving &&
                     (
-                        tls.IsNearStart(klinesViewPosition, nearDistance) || 
-                        tls.IsNearEnd(klinesViewPosition, nearDistance))
+                        tls.IsNearStart(klinesViewPosition, NearDistance) || 
+                        tls.IsNearEnd(klinesViewPosition, NearDistance))
                     ).FirstOrDefault();
 
             return trendLineStick;
@@ -182,8 +181,6 @@ namespace CryptoTrader
         {
             klinesView.Children.Remove(tls);
         }
-
-
 
     }
 }

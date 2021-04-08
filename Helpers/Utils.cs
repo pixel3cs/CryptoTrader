@@ -2,6 +2,7 @@
 using Binance.Net.Interfaces;
 using Binance.Net.Objects.Spot.MarketStream;
 using System.Collections.Generic;
+using System.Windows;
 
 namespace CryptoTrader
 {
@@ -10,8 +11,9 @@ namespace CryptoTrader
 
     public class Utils
     {
-        public static string InitialSymbol = "BTCUSDT";
-        public static List<string> ViewIntervals = new List<string>() { "1d", "4h", "15m", "1m" };
+        public static readonly string InitialSymbol = "BTCUSDT";
+        public static readonly List<string> ViewIntervals = new List<string>() { "1d", "4h", "15m", "1m" };
+        public static readonly int NearDistance = 15; // pixels
 
         public enum RequestType
         {
@@ -88,6 +90,11 @@ namespace CryptoTrader
                 case "1d": return KlineInterval.OneDay;
                 default: return KlineInterval.OneMinute;
             }
+        }
+
+        public static bool AreClosePoints(Point p1, Point p2, double nearDistance)
+        {
+            return ((p1.X - p2.X) * (p1.X - p2.X) + (p1.Y - p2.Y) * (p1.Y - p2.Y)) < nearDistance * nearDistance;
         }
 
     }
