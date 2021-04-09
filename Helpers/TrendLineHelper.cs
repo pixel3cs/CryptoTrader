@@ -58,7 +58,7 @@ namespace CryptoTrader
             return new List<TrendLine> { longTrendLine, currentTrendLine, shortTrendLine };
         }
 
-        public static void UpdateTempTargetLines(Canvas klinesView, double targetMovePercent)
+        public static void UpdateTempTargetLines(Canvas klinesView, double targetMovePercent, bool showTargetLines)
         {
             double closePrice = (double)klinesView.Children.OfType<CandleStick>().Last().OriginalKLine.Close;
             double targetPrice = (targetMovePercent / 100d) * closePrice;
@@ -66,8 +66,12 @@ namespace CryptoTrader
             TrendLineStick tlLong = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetLong.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlLong.OriginalTrendLine.StartPrice = tlLong.OriginalTrendLine.EndPrice = closePrice + targetPrice;
 
+            TrendLineStick tlCurrent = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString() && tl.OriginalTrendLine.ForSaving == false);
+
             TrendLineStick tlShort = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlShort.OriginalTrendLine.StartPrice = tlShort.OriginalTrendLine.EndPrice = closePrice - targetPrice;
+
+            tlLong.Visibility = tlCurrent.Visibility = tlShort.Visibility = showTargetLines ? Visibility.Visible : Visibility.Hidden;
         }
 
         public static void KeepTempTargetLines(Canvas klinesView)

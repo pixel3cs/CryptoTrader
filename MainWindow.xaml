@@ -12,66 +12,57 @@
     <Grid x:Name="mainGrid">
         <TabControl x:Name="tabControl" Background="Transparent" BorderBrush="#323749" BorderThickness="0,1,0,0" Padding="0">
             <TabItem Header="HOME" Height="25">
-                <Grid>
+                <Grid x:Name="tradeDataViews">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="0.25*"/>
+                        <RowDefinition Height="*"/>
                         <RowDefinition Height="3"/>
-                        <RowDefinition Height="0.75*"/>
-                        <RowDefinition Height="0"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="3"/>
+                        <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="3"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="3"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
 
-                    <GridSplitter Grid.Row="1" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
-
-                    <Grid Grid.Row="0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="3"/>
-                            <ColumnDefinition Width="400"/>
-                            <ColumnDefinition Width="3"/>
-                            <ColumnDefinition Width="500"/>
-                        </Grid.ColumnDefinitions>
-
-                        <GridSplitter Grid.Column="1" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
-                        <GridSplitter Grid.Column="3" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
-
-                        <Grid Grid.Column="0" Margin="7">
-                            <StackPanel Orientation="Vertical" VerticalAlignment="Top">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                    <TextBlock Text="Used weight: " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                    <TextBlock x:Name="usedWeight" Text="0" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                </StackPanel>
+                    <Grid Grid.Column="0" Margin="0,2,0,0">
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <TextBlock Text="Used weight: " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                <TextBlock x:Name="usedWeight" Text="0" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
                             </StackPanel>
-
-                            <TextBlock x:Name="simulationProfitTB" Text="" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-
-                            <StackPanel Orientation="Vertical" HorizontalAlignment="Right" VerticalAlignment="Bottom">
-                                <TextBlock x:Name="currentSymbolTb" Text="Current Symbol:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                <TextBlock x:Name="currentPriceTb" Text="Current Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                <TextBlock x:Name="targetMoveTb" Text="Target Move:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                <TextBlock x:Name="targetPriceTb" Text="Target Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
-                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                    <TextBlock Text="Leverage " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                    <uc:NumericUpDown x:Name="leverageTB" Value="20" Interval="1" Symbol="X" Width="70" Height="25" OnValueChangedEvent="leverageTB_OnValueChangedEvent"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                    <TextBlock Text="Target ROE " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                    <uc:NumericUpDown x:Name="targetROETb" Value="25" Interval="1" Symbol="%" Width="70" Height="25" OnValueChangedEvent="targetROETb_OnValueChangedEvent"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
                                 <TextBlock x:Name="autoTradeBuyButton" Tag="" Text="Buy" MouseDown="autoTradeButton_MouseDown" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
                                 <TextBlock x:Name="autoTradeWatchButton" Tag="" Text="Watch" MouseDown="autoTradeButton_MouseDown" Margin="5,0,0,0" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
 
-                        <Grid Grid.Column="2">
+                        <StackPanel Orientation="Vertical" VerticalAlignment="Bottom">
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <TextBlock Text="Leverage " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                <uc:NumericUpDown x:Name="leverageTB" Value="20" Interval="1" Symbol="X" Width="70" Height="25" OnValueChangedEvent="leverageTB_OnValueChangedEvent"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <TextBlock Text="Target ROE " VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                <uc:NumericUpDown x:Name="targetROETb" Value="25" Interval="1" Symbol="%" Width="70" Height="25" OnValueChangedEvent="targetROETb_OnValueChangedEvent"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                <TextBlock Text="Show Target Lines" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                                <CheckBox x:Name="showTargetLines" IsChecked="True" Margin="5,0,0,0" VerticalAlignment="Center" Checked="showTargetLines_Checked" Unchecked="showTargetLines_Checked"/>
+                            </StackPanel>
+                            <TextBlock x:Name="currentSymbolTb" Text="Current Symbol:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                            <TextBlock x:Name="currentPriceTb" Text="Current Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                            <TextBlock x:Name="targetMoveTb" Text="Target Move:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                            <TextBlock x:Name="targetPriceTb" Text="Target Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
+                        </StackPanel>
+
+                        <Grid Width="280" HorizontalAlignment="Right">
                             <TextBlock Text="USDT" Margin="5,0,0,0" Padding="0" VerticalAlignment="Top" HorizontalAlignment="Left" Style="{StaticResource ResourceKey=TBStyle}"/>
-                            <TextBox x:Name="usdtSearch" Text="" FontSize="13" Foreground="#aaa" Height="20" Margin="50,0,100,0" VerticalAlignment="Top" KeyUp="symbolSearch_KeyUp"/>
-                            <ComboBox x:Name="sortByCombo" Width="95" HorizontalAlignment="Right" VerticalAlignment="Top">
+                            <TextBox x:Name="usdtSearch" Text="" FontSize="13" Foreground="#aaa" Height="20" Margin="50,0,80,0" VerticalAlignment="Top" KeyUp="symbolSearch_KeyUp"/>
+                            <ComboBox x:Name="sortByCombo" Width="75" HorizontalAlignment="Right" VerticalAlignment="Top">
                                 <ComboBoxItem Content="24H &#129147;" Tag="1" IsSelected="True"/>
                                 <ComboBoxItem Content="24H &#129145;" Tag="2"/>
                                 <ComboBoxItem Content="Start &#129147;" Tag="3"/>
@@ -79,30 +70,23 @@
                             </ComboBox>
                             <ListView x:Name="usdt" Margin="0,20,0,0" Foreground="Gray" FontSize="16" FontWeight="Bold" SelectionChanged="listBox_SelectionChanged" PreviewKeyDown="listBox_PreviewKeyDown"/>
                         </Grid>
-
-                        <ListView Grid.Column="4" x:Name="tradeSimulationList" />
                     </Grid>
 
-                    <Grid Grid.Row="2" x:Name="tradeDataViews">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="0.5*"/>
-                            <RowDefinition Height="3"/>
-                            <RowDefinition Height="0.5*"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="0.5*"/>
-                            <ColumnDefinition Width="3"/>
-                            <ColumnDefinition Width="0.5*"/>
-                        </Grid.ColumnDefinitions>
+                    <!--<ListView Grid.Column="4" x:Name="tradeSimulationList" />-->
 
-                        <GridSplitter Grid.Row="1" Grid.ColumnSpan="3" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
-                        <GridSplitter Grid.Column="1" Grid.Row="0" Grid.RowSpan="3" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
+                    <uc:TradeDataView Grid.Row="0" Grid.Column="2" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="0" Grid.Column="4" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="2" Grid.Column="0" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="2" Grid.Column="2" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="2" Grid.Column="4" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="4" Grid.Column="0" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="4" Grid.Column="2" ShowTicks="False"/>
+                    <uc:TradeDataView Grid.Row="4" Grid.Column="4" x:Name="tradeDataView" ShowTicks="False" TradeSimulationChangedEvent="tradeDataView_TradeSimulationChangedEvent"/>
 
-                        <uc:TradeDataView Grid.Row="0" Grid.Column="0" ShowTicks="False"/>
-                        <uc:TradeDataView Grid.Row="0" Grid.Column="2" ShowTicks="False"/>
-                        <uc:TradeDataView Grid.Row="2" Grid.Column="0" ShowTicks="False"/>
-                        <uc:TradeDataView Grid.Row="2" Grid.Column="2" x:Name="tradeDataView" ShowTicks="False" TradeSimulationChangedEvent="tradeDataView_TradeSimulationChangedEvent"/>
-                    </Grid>
+                    <GridSplitter Grid.Row="1" Grid.ColumnSpan="5" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
+                    <GridSplitter Grid.Row="3" Grid.ColumnSpan="5" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
+                    <GridSplitter Grid.Column="1" Grid.RowSpan="5" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
+                    <GridSplitter Grid.Column="3" Grid.RowSpan="5" ResizeDirection="Columns" ResizeBehavior="PreviousAndNext" VerticalAlignment="Stretch" Background="#323749" Width="3"/>
                     
                 </Grid>
             </TabItem>

@@ -12,7 +12,7 @@ namespace CryptoTrader
     public class Utils
     {
         public static readonly string InitialSymbol = "BTCUSDT";
-        public static readonly List<string> ViewIntervals = new List<string>() { "1d", "4h", "15m", "1m" };
+        public static readonly List<string> ViewIntervals = new List<string>() { "4h", "2h", "1h", "30m", "15m", "5m", "3m", "1m" };
         public static readonly int NearDistance = 15; // pixels
 
         public enum RequestType

@@ -47,7 +47,7 @@ namespace CryptoTrader.UserControls
         public string CandleType { get { return (string)candelTypesPanel.Tag; } }
 
         public double TargetMovePercent { get; private set; }
-        
+        public bool ShowTargetLines { get; private set; }
 
         private bool showTicks = false;
         public bool ShowTicks { get { return showTicks; } set { showTicks = value; showHideTicksIntervals(); } }
@@ -99,7 +99,7 @@ namespace CryptoTrader.UserControls
         public void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick)
         {
             try
-            {                
+            {
                 this.Dispatcher.Invoke(() =>
                 {
                     dataLoadTime.Text = string.Format("{0:0} ms", livePriceData.LastDataLoadTime.TotalMilliseconds);
@@ -117,7 +117,7 @@ namespace CryptoTrader.UserControls
 
                             // add target trend lines
                             foreach (var targetTrendLine in TrendLineHelper.GetTempTargetLines(Interval, TargetMovePercent, newKlines.Last()))
-                                klinesView.Children.Add(new TrendLineStick(targetTrendLine));
+                                klinesView.Children.Add(new TrendLineStick(targetTrendLine) { Visibility = ShowTargetLines ? Visibility.Visible : Visibility.Hidden });
 
                             // add new trend lines
                             foreach (var trendLine in TrendLineData.LoadFromDisk(Symbol, Interval))
@@ -152,13 +152,14 @@ namespace CryptoTrader.UserControls
             }
         }
 
-        public void SetTargetPrice(double targetMovePercent)
+        public void SetTargetPrice(double targetMovePercent, bool showTargetLines)
         {
             this.TargetMovePercent = targetMovePercent;
+            this.ShowTargetLines = showTargetLines;
 
             if (klinesView.Children.Count > 0)
             {
-                TrendLineHelper.UpdateTempTargetLines(klinesView, targetMovePercent);
+                TrendLineHelper.UpdateTempTargetLines(klinesView, targetMovePercent, showTargetLines);
                 DrawKLines(); // when target price is changed (target lines need redrawing)
             }
         }
@@ -613,10 +614,7 @@ namespace CryptoTrader.UserControls
                     movingChartWithMouse = false;
 
                     if (Utils.AreClosePoints(moveStartPosition, cursorPosition, Utils.NearDistance))
-                    {
                         setRenderTransform(Matrix.Identity, true);
-                        selectTool_MouseDown(trendLineTool, null); // deselect trend line tool
-                    }
                 }
             }
 
@@ -658,6 +656,8 @@ namespace CryptoTrader.UserControls
         private void klinesView_PreviewMouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
+
+            // toggle size (full screen / normal size)
             Grid parentGrid = this.Parent as Grid;
 
             if (maximized)

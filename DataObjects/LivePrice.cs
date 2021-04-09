@@ -66,7 +66,7 @@ namespace CryptoTrader
                 Price.QuoteVolume / 1000000,
                 displayedCharacter,
                 displayedPercentage,
-                Displayed ? "[viewed]" : ""
+                Displayed ? "  [*]" : ""
                 );
         }
     }
