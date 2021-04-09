@@ -1,5 +1,6 @@
 ﻿using Binance.Net.Objects.Spot.MarketStream;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -7,68 +8,33 @@ namespace CryptoTrader.UserControls
 {
     public partial class AutoTrade : UserControl
     {
-        private TradeHelper tradeHelper;
         private int tradeCount;
         private BinanceStreamAggregatedTrade lastDisplayedTrade;
-        private bool enterWithBuy;
 
         public AutoTrade()
         {
             InitializeComponent();
         }
 
-        public void SetControlsTradeData(TradeHelper simulation, bool enterWithBuy, double trendReversalDown, double trendReversalUP)
+        public void SetControlsTradeData(string symbol, bool showTargetLines, double leverage, double targetROE)
         {
-            tradeHelper = new TradeHelper(simulation.CurrentPrice, simulation.CurrentPrice, trendReversalDown, trendReversalUP, simulation.Symbol, Utils.TradingType.LiveSimulation);
-            tradeHelper.LastTrendIsDown = (enterWithBuy == false);
-            this.enterWithBuy = enterWithBuy;
+            leverageTB.Value = leverage;
+            targetROETb.Value = targetROE;
+            showTargetLinesCB.IsChecked = showTargetLines;
+            currentSymbolTb.Text = string.Format("Current Symbol: {0}", symbol);
 
-            List<string> intervals = new List<string>() { "1h", "15m", "3m", "30s", "5s" };
-            foreach (UIElement ui in mainGrid.Children)
-                if (ui is TradeDataView)
-                {
-                    TradeDataView tdv = ui as TradeDataView;
-                    tdv.SetTargetPrice(0, true);
-                    tdv.SetRealTimeTradesList(tradeHelper);
-                    tdv.SwitchData(Utils.InitialSymbol, intervals[0], Utils.RequestType.DoNotLoad);
-                    tdv.SwitchData(simulation.Symbol, intervals[0], Utils.RequestType.DoNotLoad);
-                    intervals.RemoveAt(0);
-                }
+            int interval = 0;
+            foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
+            {
+                tdv.SetTargetPrice(targetROETb.Value / leverageTB.Value, showTargetLines);
+                tdv.SwitchData(symbol, Utils.ViewIntervals[interval++], Utils.RequestType.DoNotLoad);
+            }
 
-            this.trendReversalUP.Value = trendReversalUP;
-            this.trendReversalDown.Value = trendReversalDown;
-
-            BinanceTickClient.StartBroadcastingLastTickValue(simulation.Symbol, LastTickValueHandler);
+            BinanceTickClient.StartBroadcastingLastTickValue(symbol, LastTickValueHandler);
         }
 
         public void LastTickValueHandler(BinanceStreamAggregatedTrade trade)
         {
-            tradeHelper.CurrentPrice = (double)trade.Price;
-            if (tradeHelper.CurrentPrice < tradeHelper.CurrentMin) tradeHelper.CurrentMin = tradeHelper.CurrentPrice;
-            if (tradeHelper.CurrentPrice > tradeHelper.CurrentMax) tradeHelper.CurrentMax = tradeHelper.CurrentPrice;
-
-            // do initial buy
-            if (enterWithBuy)
-            {
-                Transaction transaction = tradeHelper.Buy(trade.TradeTime);
-                AddTransactionToListView(transaction);
-                enterWithBuy = false;
-            }
-
-            //// up > trendReservalUP % => trend reversal
-            //if (tradeHelper.LastTrendIsDown && tradeHelper.HasChangedUp())
-            //{
-            //    Transaction transaction = tradeHelper.Buy(trade.TradeTime); // buy here
-            //    AddTransactionToListView(transaction);
-            //}
-
-            // down > trendReversalDown % => trend reversal
-            if (tradeHelper.LastTrendIsUp && tradeHelper.HasChangedDown())
-            {
-                Transaction transaction = tradeHelper.Sell(trade.TradeTime); // sell here
-                AddTransactionToListView(transaction);
-            }
-
             // update view
             UpdateView(trade);
         }
@@ -86,9 +52,13 @@ namespace CryptoTrader.UserControls
                 {
                     this.Dispatcher.Invoke(() =>
                     {
-                        lastValueTB.Text = trade.Price.ToString("0.00000");
+                        lastValueTB.Text = trade.Price.ToString("$0.00000");
                         lastTimeTB.Text = trade.TradeTime.ToString("HH:mm:ss.fff");
                         tradeCountTB.Text = tradeCount.ToString();
+
+                        decimal moveTargetPercent = (decimal)targetROETb.Value / (decimal)leverageTB.Value;
+                        currentPriceTb.Text = string.Format("Current Price: ${0:0.00000}", trade.Price);
+                        targetPriceTb.Text = string.Format("Target Price: ±${0:0.00000}", (moveTargetPercent / 100m) * trade.Price);
                     });
                     
                 }
@@ -98,36 +68,35 @@ namespace CryptoTrader.UserControls
             }
         }
 
-        public void AddTransactionToListView(Transaction transaction)
+        private void leverageTB_OnValueChangedEvent()
         {
-            if (transaction == null)
+            RecalculateTargets();
+        }
+
+        private void targetROETb_OnValueChangedEvent()
+        {
+            RecalculateTargets();
+        }
+
+        private void showTargetLines_Checked(object sender, RoutedEventArgs e)
+        {
+            RecalculateTargets();
+        }
+
+        private void RecalculateTargets()
+        {
+            if (targetROETb == null || leverageTB == null || targetMoveTb == null)
                 return;
 
-            this.Dispatcher.Invoke(() =>
+            double targetMovePercent = targetROETb.Value / leverageTB.Value;
+            targetMoveTb.Text = string.Format("Target Move: {0:0.00}%", targetMovePercent);
+
+            if (tradeDataViews != null)
             {
-                profitTB.Text = string.Format("{0:0.00}%", tradeHelper.SwingProfitPercent);
-
-                ListViewItem listViewItem = new ListViewItem();
-                listViewItem.Content = transaction;
-                listViewItem.Foreground = (transaction.IsBuy || transaction.IsFinalToKeep ? TradeDataView.green2Brush : TradeDataView.red2Brush);
-                listViewItem.FontWeight = FontWeights.Bold;
-                listViewItem.FontSize = 16;
-
-                tradesList.Items.Add(listViewItem);
-            });
+                foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
+                    tdv.SetTargetPrice(targetMovePercent, showTargetLinesCB.IsChecked.Value);
+            }
         }
 
-        private void trendReserval_OnValueChangedEvent()
-        {
-            tradeHelper.TrendReversalDown = trendReversalDown.Value;
-            tradeHelper.TrendReservalUP = trendReversalUP.Value;
-
-            foreach (UIElement ui in mainGrid.Children)
-                if (ui is TradeDataView)
-                {
-                    TradeDataView tdv = ui as TradeDataView;
-                    tdv.SetTargetPrice(0, true);
-                }
-        }
     }
 }

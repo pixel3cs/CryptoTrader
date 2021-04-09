@@ -35,7 +35,6 @@
                                 <TextBlock x:Name="usedWeight" Text="0" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
-                                <TextBlock x:Name="autoTradeBuyButton" Tag="" Text="Buy" MouseDown="autoTradeButton_MouseDown" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
                                 <TextBlock x:Name="autoTradeWatchButton" Tag="" Text="Watch" MouseDown="autoTradeButton_MouseDown" Margin="5,0,0,0" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
                             </StackPanel>
                         </StackPanel>
@@ -51,7 +50,7 @@
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
                                 <TextBlock Text="Show Target Lines" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
-                                <CheckBox x:Name="showTargetLines" IsChecked="True" Margin="5,0,0,0" VerticalAlignment="Center" Checked="showTargetLines_Checked" Unchecked="showTargetLines_Checked"/>
+                                <CheckBox x:Name="showTargetLinesCB" IsChecked="True" Margin="5,0,0,0" VerticalAlignment="Center" Checked="showTargetLines_Checked" Unchecked="showTargetLines_Checked"/>
                             </StackPanel>
                             <TextBlock x:Name="currentSymbolTb" Text="Current Symbol:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
                             <TextBlock x:Name="currentPriceTb" Text="Current Price:" VerticalAlignment="Center" Style="{StaticResource ResourceKey=TBStyle}"/>
@@ -72,8 +71,6 @@
                         </Grid>
                     </Grid>
 
-                    <!--<ListView Grid.Column="4" x:Name="tradeSimulationList" />-->
-
                     <uc:TradeDataView Grid.Row="0" Grid.Column="2" ShowTicks="False"/>
                     <uc:TradeDataView Grid.Row="0" Grid.Column="4" ShowTicks="False"/>
                     <uc:TradeDataView Grid.Row="2" Grid.Column="0" ShowTicks="False"/>
@@ -81,7 +78,7 @@
                     <uc:TradeDataView Grid.Row="2" Grid.Column="4" ShowTicks="False"/>
                     <uc:TradeDataView Grid.Row="4" Grid.Column="0" ShowTicks="False"/>
                     <uc:TradeDataView Grid.Row="4" Grid.Column="2" ShowTicks="False"/>
-                    <uc:TradeDataView Grid.Row="4" Grid.Column="4" x:Name="tradeDataView" ShowTicks="False" TradeSimulationChangedEvent="tradeDataView_TradeSimulationChangedEvent"/>
+                    <uc:TradeDataView Grid.Row="4" Grid.Column="4" x:Name="tradeDataView" ShowTicks="False" />
 
                     <GridSplitter Grid.Row="1" Grid.ColumnSpan="5" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>
                     <GridSplitter Grid.Row="3" Grid.ColumnSpan="5" ResizeDirection="Rows" ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch" Background="#323749" Height="3"/>

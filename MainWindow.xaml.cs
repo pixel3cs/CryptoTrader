@@ -20,8 +20,8 @@ namespace CryptoTrader
             int interval = 0;
             foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
             {
-                tdv.SwitchData(Utils.InitialSymbol, ViewIntervals[interval++], RequestType.DoNotLoad);
-                tdv.SetTargetPrice(targetROETb.Value / leverageTB.Value, showTargetLines.IsChecked.Value);
+                tdv.SetTargetPrice(targetROETb.Value / leverageTB.Value, showTargetLinesCB.IsChecked.Value);
+                tdv.SwitchData(Utils.InitialSymbol, ViewIntervals[interval++], RequestType.DoNotLoad);                
             }
 
             currentSymbolTb.Text = string.Format("Current Symbol: {0}", Utils.InitialSymbol);
@@ -52,9 +52,9 @@ namespace CryptoTrader
 
                     if (price.Symbol.Name == tradeDataView.Symbol)
                     {
-                        decimal moveTarget = (decimal)targetROETb.Value / (decimal)leverageTB.Value;
+                        decimal moveTargetPercent = (decimal)targetROETb.Value / (decimal)leverageTB.Value;
                         currentPriceTb.Text = string.Format("Current Price: ${0:0.00000}", price.Price.LastPrice);
-                        targetPriceTb.Text = string.Format("Target Price: ±${0:0.00000}", (moveTarget / 100m) * price.Price.LastPrice);
+                        targetPriceTb.Text = string.Format("Target Price: ±${0:0.00000}", (moveTargetPercent / 100m) * price.Price.LastPrice);
                     }
                 }
             });
@@ -98,64 +98,12 @@ namespace CryptoTrader
             }
         }
 
-        private void tradeDataView_TradeSimulationChangedEvent(TradeHelper simulation)
-        {
-            //tradeSimulationList.Items.Clear();
-
-            //if (simulation == null)
-            //{
-            //    simulationProfitTB.Text = "";
-
-            //    autoTradeBuyButton.Text = "Buy";
-            //    autoTradeBuyButton.IsEnabled = false;
-            //    autoTradeBuyButton.ClearValue(TextBlock.BackgroundProperty);
-            //    autoTradeBuyButton.Tag = null;
-
-            //    autoTradeWatchButton.Text = "Watch";
-            //    autoTradeWatchButton.IsEnabled = false;
-            //    autoTradeWatchButton.ClearValue(TextBlock.BackgroundProperty);
-            //    autoTradeWatchButton.Tag = null;
-
-            //    return;
-            //}
-
-            //string swingProfitStr = string.Format("Swing ({0:0.00}%)", simulation.SwingProfitPercent);
-            //string keepProfitStr = string.Format("Keep ({0:0.00}%)", simulation.HoldProfitPercent);
-            //simulationProfitTB.Text = string.Format("{0} > {1}", 
-            //    simulation.SwingProfitPercent > simulation.HoldProfitPercent ? swingProfitStr : keepProfitStr,
-            //    simulation.SwingProfitPercent > simulation.HoldProfitPercent ? keepProfitStr : swingProfitStr);
-
-            //autoTradeBuyButton.Text = "Buy " + tradeDataView.Symbol;
-            //autoTradeBuyButton.IsEnabled = true;
-            //autoTradeBuyButton.Background = Brushes.Green;
-            //autoTradeBuyButton.Tag = simulation;
-
-            //autoTradeWatchButton.Text = "Watch " + tradeDataView.Symbol;
-            //autoTradeWatchButton.IsEnabled = true;
-            //autoTradeWatchButton.Background = Brushes.DarkRed;
-            //autoTradeWatchButton.Tag = simulation;
-
-            //foreach (Transaction transaction in simulation.Transactions)
-            //{
-            //    ListViewItem listViewItem = new ListViewItem();
-            //    listViewItem.Content = transaction;
-            //    listViewItem.Foreground = (transaction.IsBuy || transaction.IsFinalToKeep ? TradeDataView.green2Brush : TradeDataView.red2Brush);
-            //    listViewItem.FontWeight = FontWeights.Bold;
-            //    listViewItem.FontSize = 16;
-
-            //    tradeSimulationList.Items.Add(listViewItem);
-            //}
-        }
-
         private void autoTradeButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            TextBlock autoTradeButton = sender as TextBlock;
-            TradeHelper simulation = autoTradeButton.Tag as TradeHelper;
-            bool enterWithBuy = (autoTradeButton == autoTradeBuyButton);
             TabItem tab = null;
 
             // select tab if exists
-            tab = tabControl.Items.OfType<TabItem>().FirstOrDefault(t => t.Header.ToString() == simulation.Symbol);
+            tab = tabControl.Items.OfType<TabItem>().FirstOrDefault(t => t.Header.ToString() == tradeDataView.Symbol);
             if (tab != null)
             {
                 Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = tab));
@@ -165,9 +113,9 @@ namespace CryptoTrader
             // create new tab
             tab = new TabItem();
             AutoTrade autoTrade = new AutoTrade();
-            autoTrade.SetControlsTradeData(simulation, enterWithBuy, 0, 0);
+            autoTrade.SetControlsTradeData(tradeDataView.Symbol, showTargetLinesCB.IsChecked.Value, leverageTB.Value, targetROETb.Value);
 
-            tab.Header = simulation.Symbol;
+            tab.Header = tradeDataView.Symbol;
             tab.IsSelected = true;
             tab.Content = autoTrade;
             tabControl.Items.Add(tab);
@@ -201,7 +149,7 @@ namespace CryptoTrader
             if (tradeDataViews != null)
             {
                 foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
-                    tdv.SetTargetPrice(targetMovePercent, showTargetLines.IsChecked.Value);                    
+                    tdv.SetTargetPrice(targetMovePercent, showTargetLinesCB.IsChecked.Value);                    
             }
         }
 

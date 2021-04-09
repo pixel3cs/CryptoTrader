@@ -70,7 +70,7 @@ namespace CryptoTrader
                 case "4h": return 4 * 60;
                 case "12h": return 12 * 60;
                 case "1d": return 24 * 60;
-                default: return 0;
+                default: return 1;
             }
         }
 

@@ -17,7 +17,7 @@ namespace CryptoTrader
         private static TrendLineStick movingLine = null;
         private static bool movingStartPoint = false;        
 
-        public static List<TrendLine> GetTempTargetLines(string interval, double targetMovePercent, IBinanceKline lastKline)
+        public static List<TrendLineStick> GetTempTargetLines(string interval, double targetMovePercent, bool showTargetLines, IBinanceKline lastKline)
         {
             int intervalInMinutes = Utils.IntervalInMinutes(interval);
             double closePrice = (double)lastKline.Close;
@@ -55,7 +55,12 @@ namespace CryptoTrader
                 LineType = TrendLineType.TargetShort.ToString()
             };
 
-            return new List<TrendLine> { longTrendLine, currentTrendLine, shortTrendLine };
+            return new List<TrendLineStick> 
+            {
+                new TrendLineStick(longTrendLine) { Visibility = showTargetLines ? Visibility.Visible : Visibility.Hidden },
+                new TrendLineStick(currentTrendLine) { Visibility = showTargetLines ? Visibility.Visible : Visibility.Hidden },
+                new TrendLineStick(shortTrendLine) { Visibility = showTargetLines ? Visibility.Visible : Visibility.Hidden }
+            };
         }
 
         public static void UpdateTempTargetLines(Canvas klinesView, double targetMovePercent, bool showTargetLines)
@@ -67,6 +72,7 @@ namespace CryptoTrader
             tlLong.OriginalTrendLine.StartPrice = tlLong.OriginalTrendLine.EndPrice = closePrice + targetPrice;
 
             TrendLineStick tlCurrent = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString() && tl.OriginalTrendLine.ForSaving == false);
+            tlCurrent.OriginalTrendLine.StartPrice = tlCurrent.OriginalTrendLine.EndPrice = closePrice;
 
             TrendLineStick tlShort = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlShort.OriginalTrendLine.StartPrice = tlShort.OriginalTrendLine.EndPrice = closePrice - targetPrice;
@@ -89,31 +95,26 @@ namespace CryptoTrader
             klinesView.Children.Add(tlShort);
         }
 
-        public static TrendLineStick MouseDown(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
+        public static TrendLineStick MouseDown(double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
         {
             if (movingLine != null)
                 return null;
 
-            if (selectedTool == "trendline")
-            {
-                TrendLine trendLine = new TrendLine();
-                trendLine.LineType = Utils.TrendLineType.Normal.ToString();
-                trendLine.ForSaving = true;
-                trendLine.StartPrice = trendLine.EndPrice = priceAtCursorPosition;
+            TrendLine trendLine = new TrendLine();
+            trendLine.LineType = Utils.TrendLineType.Normal.ToString();
+            trendLine.ForSaving = true;
+            trendLine.StartPrice = trendLine.EndPrice = priceAtCursorPosition;
 
-                Point klinesViewPosition = Mouse.GetPosition(klinesView);
-                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+            Point klinesViewPosition = Mouse.GetPosition(klinesView);
+            double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
 
-                trendLine.StartTime = trendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
-                movingStartPoint = false;
+            trendLine.StartTime = trendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+            movingStartPoint = false;
 
-                movingLine = new TrendLineStick(trendLine);
-                klinesView.Children.Add(movingLine);
+            movingLine = new TrendLineStick(trendLine);
+            klinesView.Children.Add(movingLine);
 
-                return movingLine;
-            }
-
-            return null;
+            return movingLine;
         }
 
         public static void MouseDownOnLine(TrendLineStick tls, Canvas klinesView)
@@ -123,34 +124,29 @@ namespace CryptoTrader
             movingLine = tls;
         }
 
-        public static TrendLineStick MouseMove(string selectedTool, double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
+        public static TrendLineStick MouseMove(double priceAtCursorPosition, Canvas klinesView, CandleStick firstKline, CandleStick lastKline, double viewWidth)
         {
             if (movingLine == null)
                 return null;
 
-            if (selectedTool == "trendline")
+            Point klinesViewPosition = Mouse.GetPosition(klinesView);
+            double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+
+            if (movingStartPoint)
             {
-                Point klinesViewPosition = Mouse.GetPosition(klinesView);
-                double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
-
-                if (movingStartPoint)
-                {
-                    movingLine.OriginalTrendLine.StartPrice = priceAtCursorPosition;
-                    movingLine.OriginalTrendLine.StartTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
-                }
-                else
-                {
-                    movingLine.OriginalTrendLine.EndPrice = priceAtCursorPosition;
-                    movingLine.OriginalTrendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
-                }
-
-                return movingLine;
+                movingLine.OriginalTrendLine.StartPrice = priceAtCursorPosition;
+                movingLine.OriginalTrendLine.StartTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+            }
+            else
+            {
+                movingLine.OriginalTrendLine.EndPrice = priceAtCursorPosition;
+                movingLine.OriginalTrendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
             }
 
-            return null;
+            return movingLine;
         }
 
-        public static bool MouseUp(string selectedTool, Canvas klinesView)
+        public static bool MouseUp(Canvas klinesView)
         {
             if (movingLine == null)
                 return false;
