@@ -170,8 +170,11 @@ namespace CryptoTrader
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                MainWindow main = Application.Current.MainWindow as MainWindow;
-                main.usedWeight.Text = string.Format("{0}, {1} / 1m", general, for1m);
+                if (string.IsNullOrEmpty(general) == false || string.IsNullOrEmpty(for1m) == false)
+                {
+                    MainWindow main = Application.Current.MainWindow as MainWindow;
+                    main.usedWeight.Text = string.Format("{0}, {1} / 1m", general, for1m);
+                }
             });
         }
 

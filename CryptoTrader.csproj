@@ -163,8 +163,14 @@
     <Compile Include="UserControls\NumericUpDown.xaml.cs">
       <DependentUpon>NumericUpDown.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UserControls\LongShortRatioStick.xaml.cs">
+      <DependentUpon>LongShortRatioStick.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserControls\TradeDataView.xaml.cs">
       <DependentUpon>TradeDataView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="UserControls\OpenInterestStick.xaml.cs">
+      <DependentUpon>OpenInterestStick.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserControls\TrendLineStick.xaml.cs">
       <DependentUpon>TrendLineStick.xaml</DependentUpon>
@@ -196,9 +202,17 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="UserControls\LongShortRatioStick.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="UserControls\TradeDataView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UserControls\OpenInterestStick.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="UserControls\TrendLineStick.xaml">
       <SubType>Designer</SubType>

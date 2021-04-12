@@ -106,9 +106,9 @@ namespace CryptoTrader
             trendLine.StartPrice = trendLine.EndPrice = priceAtCursorPosition;
 
             Point klinesViewPosition = Mouse.GetPosition(klinesView);
-            double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+            double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.OpenTime).TotalMinutes) / viewWidth;
 
-            trendLine.StartTime = trendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+            trendLine.StartTime = trendLine.EndTime = firstKline.OriginalKLine.OpenTime.AddMinutes(minutesAtXPosition);
             movingStartPoint = false;
 
             movingLine = new TrendLineStick(trendLine);
@@ -130,17 +130,17 @@ namespace CryptoTrader
                 return null;
 
             Point klinesViewPosition = Mouse.GetPosition(klinesView);
-            double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.CloseTime).TotalMinutes) / viewWidth;
+            double minutesAtXPosition = (klinesViewPosition.X * (lastKline.OriginalKLine.CloseTime - firstKline.OriginalKLine.OpenTime).TotalMinutes) / viewWidth;
 
             if (movingStartPoint)
             {
                 movingLine.OriginalTrendLine.StartPrice = priceAtCursorPosition;
-                movingLine.OriginalTrendLine.StartTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                movingLine.OriginalTrendLine.StartTime = firstKline.OriginalKLine.OpenTime.AddMinutes(minutesAtXPosition);
             }
             else
             {
                 movingLine.OriginalTrendLine.EndPrice = priceAtCursorPosition;
-                movingLine.OriginalTrendLine.EndTime = firstKline.OriginalKLine.CloseTime.AddMinutes(minutesAtXPosition);
+                movingLine.OriginalTrendLine.EndTime = firstKline.OriginalKLine.OpenTime.AddMinutes(minutesAtXPosition);
             }
 
             return movingLine;

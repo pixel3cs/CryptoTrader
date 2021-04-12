@@ -1,12 +1,13 @@
 ﻿using Binance.Net.Enums;
 using Binance.Net.Interfaces;
+using Binance.Net.Objects.Futures.MarketData;
 using Binance.Net.Objects.Spot.MarketStream;
 using System.Collections.Generic;
 using System.Windows;
 
 namespace CryptoTrader
 {
-    public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick);
+    public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, IEnumerable<BinanceFuturesOpenInterestHistory> newOpenInterest, IEnumerable<BinanceFuturesLongShortRatio> ttlsRatioPositions, IEnumerable<BinanceFuturesLongShortRatio> glsAccountRatio, bool erasePreviousData, bool isTick);
     public delegate void LastTickValueDelegate(BinanceStreamAggregatedTrade trade);
 
     public class Utils
@@ -89,6 +90,23 @@ namespace CryptoTrader
                 case "12h": return KlineInterval.TwelveHour;
                 case "1d": return KlineInterval.OneDay;
                 default: return KlineInterval.OneMinute;
+            }
+        }
+
+        public static PeriodInterval? ToPeriodInterval(string interval)
+        {
+            switch (interval)
+            {
+                case "5m": return PeriodInterval.FiveMinutes;
+                case "15m": return PeriodInterval.FifteenMinutes;
+                case "30m": return PeriodInterval.ThirtyMinutes;
+                case "1h": return PeriodInterval.OneHour;
+                case "2h": return PeriodInterval.TwoHour;
+                case "4h": return PeriodInterval.FourHour;
+                case "6h": return PeriodInterval.SixHour;
+                case "12h": return PeriodInterval.TwelveHour;
+                case "1d": return PeriodInterval.OneDay;
+                default: return null;
             }
         }
 

@@ -1,6 +1,10 @@
 ﻿using Binance.Net;
 using Binance.Net.Enums;
+using Binance.Net.Objects.Futures.MarketData;
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Windows.Input;
 
@@ -57,11 +61,38 @@ namespace CryptoTrader
                 if (klinesClient == null)
                     klinesClient = new BinanceClient();
 
-                var serverResponse = klinesClient.FuturesUsdt.Market.GetKlines(symbol, klineInterval);
-                MainWindow.UpdateWeightUsage(serverResponse.ResponseHeaders);                
+                var klinesResponse = klinesClient.FuturesUsdt.Market.GetKlines(symbol, klineInterval);
+                MainWindow.UpdateWeightUsage(klinesResponse.ResponseHeaders);
+                
+                if (klinesResponse != null && klinesResponse.Success)
+                {
+                    PeriodInterval? periodInerval = Utils.ToPeriodInterval(interval);
+                    IEnumerable<BinanceFuturesOpenInterestHistory> openInterestHistory = null;
+                    IEnumerable<BinanceFuturesLongShortRatio> ttlsRatioPositions = null;
+                    IEnumerable<BinanceFuturesLongShortRatio> glsAccountRatio = null;
 
-                if (serverResponse != null && serverResponse.Success)
-                    serverDataHandler(serverResponse.Data, true, false);
+                    if (periodInerval != null)
+                    {
+                        int limit = klinesResponse.Data.Count();
+                        var openInterestResponse = klinesClient.FuturesUsdt.Market.GetOpenInterestHistory(symbol, periodInerval.Value, limit);
+                        MainWindow.UpdateWeightUsage(openInterestResponse.ResponseHeaders);
+
+                        var ttlsRatioPositionsResponse = klinesClient.FuturesUsdt.Market.GetTopLongShortPositionRatio(symbol, periodInerval.Value, limit, null, null);
+                        MainWindow.UpdateWeightUsage(ttlsRatioPositionsResponse.ResponseHeaders);
+
+                        var glsAccountRatioResponse = klinesClient.FuturesUsdt.Market.GetGlobalLongShortAccountRatio(symbol, periodInerval.Value, limit, null, null);
+                        MainWindow.UpdateWeightUsage(glsAccountRatioResponse.ResponseHeaders);
+
+                        if (openInterestResponse != null && openInterestResponse.Success && ttlsRatioPositionsResponse != null && ttlsRatioPositionsResponse.Success && glsAccountRatioResponse != null && glsAccountRatioResponse.Success)
+                        {
+                            openInterestHistory = openInterestResponse.Data;
+                            ttlsRatioPositions = ttlsRatioPositionsResponse.Data;
+                            glsAccountRatio = glsAccountRatioResponse.Data;
+                        }
+                    }
+
+                    serverDataHandler(klinesResponse.Data, openInterestHistory, ttlsRatioPositions, glsAccountRatio, true, false);
+                }
             }
 
             LastDataLoadTime = DateTime.Now - dateStart;

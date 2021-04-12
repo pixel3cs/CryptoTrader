@@ -25,8 +25,8 @@ namespace CryptoTrader.UserControls
 
         public void SetXPositions(double viewWidth, CandleStick firstKline, CandleStick lastKline)
         {
-            line.X1 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.CloseTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OriginalTrendLine.StartTime.Ticks);
-            line.X2 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.CloseTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OriginalTrendLine.EndTime.Ticks);
+            line.X1 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OriginalTrendLine.StartTime.Ticks);
+            line.X2 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OriginalTrendLine.EndTime.Ticks);
         }
 
         public void SetYPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)

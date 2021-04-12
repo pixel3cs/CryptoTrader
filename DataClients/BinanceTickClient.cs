@@ -179,7 +179,7 @@ namespace CryptoTrader
                     if (serverDataHandlers.ContainsKey(0))
                     {
                         foreach (var serverDataHandler in serverDataHandlers[0])
-                            serverDataHandler(ticks, false, true);
+                            serverDataHandler(ticks, null, null, null, false, true);
                     }
                     ticks.Clear();
                 }
@@ -190,7 +190,7 @@ namespace CryptoTrader
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s1 };
                         foreach (var serverDataHandler in serverDataHandlers[1])
-                            serverDataHandler(newKLines, false, true);
+                            serverDataHandler(newKLines, null, null, null, false, true);
                     }
                     s1 = null;
                 }
@@ -201,7 +201,7 @@ namespace CryptoTrader
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s3 };
                         foreach (var serverDataHandler in serverDataHandlers[3])
-                            serverDataHandler(newKLines, false, true);
+                            serverDataHandler(newKLines, null, null, null, false, true);
                     }
                     s3 = null;
                     s3Count = 0;
@@ -213,7 +213,7 @@ namespace CryptoTrader
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s5 };
                         foreach (var serverDataHandler in serverDataHandlers[5])
-                            serverDataHandler(newKLines, false, true);
+                            serverDataHandler(newKLines, null, null, null, false, true);
                     }
                     s5 = null;
                     s5Count = 0;
@@ -225,7 +225,7 @@ namespace CryptoTrader
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s15 };
                         foreach (var serverDataHandler in serverDataHandlers[15])
-                            serverDataHandler(newKLines, false, true);
+                            serverDataHandler(newKLines, null, null, null, false, true);
                     }
                     s15 = null;
                     s15Count = 0;
@@ -237,7 +237,7 @@ namespace CryptoTrader
                     {
                         List<BinanceKLine> newKLines = new List<BinanceKLine>() { s30 };
                         foreach (var serverDataHandler in serverDataHandlers[30])
-                            serverDataHandler(newKLines, false, true);
+                            serverDataHandler(newKLines, null, null, null, false, true);
                     }
                     s30 = null;
                     s30Count = 0;

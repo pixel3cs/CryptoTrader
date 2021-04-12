@@ -10,6 +10,8 @@
     <Grid x:Name="mainGrid" ClipToBounds="True">
         <Canvas x:Name="klinesView" Margin="0,22,0,22"/>
 
+        <Line x:Name="cursorLine" X1="0" Y1="0" X2="0" Y2="0" Stroke="LightGray" StrokeThickness="1" StrokeDashArray="2 2"/>
+
         <StackPanel HorizontalAlignment="Left" VerticalAlignment="Top" Orientation="Horizontal">
             <StackPanel x:Name="candelTypesPanel" Tag="TA" Orientation="Horizontal">
                 <TextBlock Text="TA" Style="{StaticResource ResourceKey=ChooseDisplayStyleSelected}" MouseDown="selectCandleType_MouseDown"/>
@@ -50,10 +52,6 @@
         </StackPanel>
 
         <StackPanel HorizontalAlignment="Right" VerticalAlignment="Bottom" Orientation="Horizontal">
-            <TextBlock Text="&#128176;" FontSize="15" Foreground="Yellow"/>
-            <TextBlock x:Name="profitTB" Text="" FontSize="15" Foreground="Yellow"/>
-            <TextBlock Text=" &#127760;" FontSize="15" Foreground="Yellow"/>
-            <TextBlock x:Name="dataLoadTime" Text="" FontSize="15" Foreground="Yellow"/>
             <TextBlock Text=" &#128396;" FontSize="15" Foreground="Yellow"/>
             <TextBlock x:Name="renderLoadTime" Text="" FontSize="15" Foreground="Yellow"/>
         </StackPanel>

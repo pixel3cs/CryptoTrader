@@ -43,11 +43,11 @@ namespace CryptoTrader.UserControls
         //    this.Low = (double)OriginalKLine.Low;
         //}
 
-        public void SetWidthPositions(double viewWidth, double lowestLeftX, double highestRightX, double xPosition)
+        public void SetWidthPositions(double viewWidth, CandleStick firstKline, CandleStick lastKline)
         {
-            double xViewLeft = Utils.CalculateViewWidth(viewWidth, lowestLeftX, highestRightX, xPosition + 0.25d);
-            double xViewRight = Utils.CalculateViewWidth(viewWidth, lowestLeftX, highestRightX, xPosition + 1d);
-            
+            double xViewLeft = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, this.OriginalKLine.OpenTime.Ticks);
+            double xViewRight = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, this.OriginalKLine.CloseTime.Ticks) - 0.25d;
+
             Canvas.SetLeft(this, xViewLeft);
             this.Width = Math.Abs(xViewRight - xViewLeft);
         }
