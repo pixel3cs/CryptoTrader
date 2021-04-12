@@ -7,7 +7,7 @@ using static CryptoTrader.Utils;
 
 namespace CryptoTrader.UserControls
 {
-    public partial class LongShortRatioStick : UserControl
+    public partial class BarStick : UserControl
     {
 
         public double Open { get; private set; }
@@ -18,12 +18,12 @@ namespace CryptoTrader.UserControls
         public bool Up { get { return Close >= Open; } }
         public int Type;
 
-        private LongShortRatioStick()
+        private BarStick()
         {
             InitializeComponent();
         }
 
-        public LongShortRatioStick(double currentValue, DateTime currentTime, double prevValue, DateTime prevTime, int type)
+        public BarStick(double currentValue, DateTime currentTime, double prevValue, DateTime prevTime, int type)
         {
             InitializeComponent();
             Open = prevValue;
@@ -37,13 +37,13 @@ namespace CryptoTrader.UserControls
         {
             double X1 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, OpenTime.Ticks);
             double X2 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, CloseTime.Ticks);
-            Canvas.SetLeft(this, X1);
-            this.Width = Math.Abs(X2 - X1);
+            Canvas.SetLeft(this, X1 + (X2 - X1) / 4d);
+            this.Width = Math.Abs(X2 - X1 - 2 *((X2 - X1) / 4d));
         }
 
         public void SetYPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)
         {
-            viewHeight = viewHeight / 3;
+            //viewHeight = viewHeight / 3;
             double high = Math.Max(Open, Close);
             double low = Math.Min(Open, Close);
             double Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, high);

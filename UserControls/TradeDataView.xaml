@@ -21,7 +21,8 @@
             </StackPanel>
 
             <StackPanel x:Name="toolsPanel" Orientation="Horizontal" Margin="5,0,0,0">
-                <TextBlock Text="&#8251;" Tag="savemark" Foreground="#FFB27F" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="savemark_MouseDown"/>
+                <TextBlock Text="&#8251;" Tag="savemark" Foreground="#FFB27F" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="tools_MouseDown"/>
+                <TextBlock Text="&#10542;" Tag="longshort" x:Name="longShortTb" Foreground="#7FFF7F" Style="{StaticResource ResourceKey=ChooseToolStyle}" MouseDown="tools_MouseDown"/>
             </StackPanel>
         </StackPanel>
 

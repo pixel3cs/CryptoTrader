@@ -7,7 +7,8 @@ using System.Windows;
 
 namespace CryptoTrader
 {
-    public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, IEnumerable<BinanceFuturesOpenInterestHistory> newOpenInterest, IEnumerable<BinanceFuturesLongShortRatio> ttlsRatioPositions, IEnumerable<BinanceFuturesLongShortRatio> glsAccountRatio, bool erasePreviousData, bool isTick);
+    public delegate void ServerDataProcessDelegate(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick);
+    public delegate void ServerDataLongShortProcessDelegate(IEnumerable<BinanceFuturesOpenInterestHistory> newOpenInterest, IEnumerable<BinanceFuturesLongShortRatio> ttlsRatioPositions, IEnumerable<BinanceFuturesLongShortRatio> glsAccountRatio);
     public delegate void LastTickValueDelegate(BinanceStreamAggregatedTrade trade);
 
     public class Utils

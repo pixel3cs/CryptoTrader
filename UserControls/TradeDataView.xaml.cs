@@ -24,6 +24,7 @@ namespace CryptoTrader.UserControls
         public static readonly Brush alteredBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         public static readonly Brush realRedBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF0000"));
         public static readonly Brush realGreenBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00FF00"));
+        public static readonly Brush realGrayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#373737"));
 
         protected object viewControlsLock = new object();
         protected bool isDrawing = false;
@@ -67,8 +68,9 @@ namespace CryptoTrader.UserControls
             alteredBrush.Freeze();
             realRedBrush.Freeze();
             realGreenBrush.Freeze();
+            realGrayBrush.Freeze();
 
-            livePriceData = new LivePriceData(ServerDataHandler);
+            livePriceData = new LivePriceData(ServerDataHandler, ServerDataLongShortHandler);
         }
 
         public void SwitchData(string newSymbol, string newInterval, RequestType requestType)
@@ -81,6 +83,8 @@ namespace CryptoTrader.UserControls
                     klinesView.Children.Clear();
 
                     renderLoadTime.Text = cursorPrice.Text = intervalAVG.Text = "";
+                    cursorLine.Visibility = Visibility.Collapsed;
+                    longShortTb.Visibility = Visibility.Visible;
                 }
 
                 selectPanelUIOption(symbolsPanel, newSymbol);
@@ -91,7 +95,7 @@ namespace CryptoTrader.UserControls
             }
         }
 
-        public void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, IEnumerable<BinanceFuturesOpenInterestHistory> newOpenInterest, IEnumerable<BinanceFuturesLongShortRatio> ttlsRatioPositions, IEnumerable<BinanceFuturesLongShortRatio> glsAccountRatio, bool erasePreviousData, bool isTick)
+        public void ServerDataHandler(IEnumerable<IBinanceKline> newKlines, bool erasePreviousData, bool isTick)
         {
             try
             {
@@ -100,7 +104,10 @@ namespace CryptoTrader.UserControls
                     lock (viewControlsLock)
                     {
                         if (erasePreviousData)
+                        {
                             klinesView.Children.Clear();
+                            longShortTb.Visibility = Visibility.Visible;
+                        }
 
                         if (isTick == false && klinesView != null)
                         {
@@ -115,31 +122,6 @@ namespace CryptoTrader.UserControls
                             // add new trend lines
                             foreach (var trendLine in TrendLineData.LoadFromDisk(Symbol, Interval))
                                 klinesView.Children.Add(new TrendLineStick(trendLine));
-
-                            // add new open interest history
-                            if(newOpenInterest != null && ttlsRatioPositions != null)
-                            {
-                                BinanceFuturesOpenInterestHistory prevOI = newOpenInterest.First();
-                                foreach (var oi in newOpenInterest)
-                                {
-                                    klinesView.Children.Add(new OpenInterestStick(oi, prevOI));
-                                    prevOI = oi;
-                                }
-
-                                BinanceFuturesLongShortRatio prevTTLSRP = ttlsRatioPositions.First();
-                                foreach (var ttlsRP in ttlsRatioPositions)
-                                {
-                                    klinesView.Children.Add(new LongShortRatioStick((double)ttlsRP.LongShortRatio, ttlsRP.Timestamp.Value, (double)prevTTLSRP.LongShortRatio, prevTTLSRP.Timestamp.Value, 1));
-                                    prevTTLSRP = ttlsRP;
-                                }
-
-                                BinanceFuturesLongShortRatio prevGLSAR = glsAccountRatio.First();
-                                foreach (var glsar in glsAccountRatio)
-                                {
-                                    klinesView.Children.Add(new LongShortRatioStick((double)glsar.LongShortRatio, glsar.Timestamp.Value, (double)prevGLSAR.LongShortRatio, prevGLSAR.Timestamp.Value, 2));
-                                    prevGLSAR = glsar;
-                                }
-                            }
                         }
 
                         if (isTick && newKlines != null)
@@ -179,6 +161,58 @@ namespace CryptoTrader.UserControls
             catch
             {
             }
+        }
+
+        public void ServerDataLongShortHandler(IEnumerable<BinanceFuturesOpenInterestHistory> newOpenInterest, IEnumerable<BinanceFuturesLongShortRatio> ttlsRatioPositions, IEnumerable<BinanceFuturesLongShortRatio> glsAccountRatio)
+        {
+            try
+            {
+                this.Dispatcher.Invoke(() =>
+                {
+                    lock (viewControlsLock)
+                    {
+                        // open interest
+                        if (newOpenInterest != null)
+                        {                            
+                            BinanceFuturesOpenInterestHistory prev1 = newOpenInterest.First();
+                            foreach (var var1 in newOpenInterest)
+                            {
+                                klinesView.Children.Add(new BarStick((double)var1.SumOpenInterestValue, var1.Timestamp.Value, (double)prev1.SumOpenInterestValue, prev1.Timestamp.Value, 1));
+                                prev1 = var1;
+                            }
+                        }
+
+                        // top traders long/short positions
+                        if (ttlsRatioPositions != null)
+                        {                            
+                            BinanceFuturesLongShortRatio prev2 = ttlsRatioPositions.First();
+                            foreach (var var2 in ttlsRatioPositions)
+                            {
+                                klinesView.Children.Add(new BarStick((double)var2.LongShortRatio, var2.Timestamp.Value, (double)prev2.LongShortRatio, prev2.Timestamp.Value, 2));
+                                prev2 = var2;
+                            }
+                        }
+
+                        // global long/short account ratio
+                        if (glsAccountRatio != null)
+                        {
+                            BinanceFuturesLongShortRatio prev3 = glsAccountRatio.First();
+                            foreach (var var3 in glsAccountRatio)
+                            {
+                                klinesView.Children.Add(new BarStick((double)var3.LongShortRatio, var3.Timestamp.Value, (double)prev3.LongShortRatio, prev3.Timestamp.Value, 3));
+                                prev3 = var3;
+                            }
+                        }
+                    }
+
+                    setRenderTransform(Matrix.Identity, true);
+
+                    DrawKLines(); // when new data is loaded
+                });
+            }
+            catch
+            {
+            }            
         }
 
         public void SetTargetPrice(double targetMovePercent, bool showTargetLines)
@@ -244,9 +278,15 @@ namespace CryptoTrader.UserControls
 
             cursorPrice.Margin = new Thickness(cursorPosition.X + 3, cursorPosition.Y + 3, 0, 0);
             if (klinesView.Children.Count > 0) // if no tool selected and data is loaded
+            {
                 cursorPrice.Text = string.Format("{0:0.00000}", priceAtCursorPosition);
+                cursorLine.Visibility = Visibility.Visible;
+            }
             else
+            {
                 cursorPrice.Text = string.Empty;
+                cursorLine.Visibility = Visibility.Collapsed;
+            }
         }
 
         protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -308,13 +348,14 @@ namespace CryptoTrader.UserControls
                     trendLine.Fill(greenBrush, redBrush);
                 }
 
-                // set OpenHistory positions
-                List<OpenInterestStick> oilines = klinesView.Children.OfType<OpenInterestStick>().ToList();
+                // open interest
+                List<BarStick> lsrlines = klinesView.Children.OfType<BarStick>().ToList();
+                List<BarStick> oilines = lsrlines.Where(lsr => lsr.Type == 1).ToList();
                 if (oilines != null && oilines.Count > 0)
                 {
                     double lowestOIPrice = oilines.Min(o => o.Close);
                     double highestOIPrice = oilines.Max(o => o.Close);
-                    foreach (OpenInterestStick oiline in oilines)
+                    foreach (BarStick oiline in oilines)
                     {
                         oiline.SetXPositions(viewWidth, firstKline, lastKline);
                         oiline.SetYPositions(viewHeight, lowestOIPrice, highestOIPrice);
@@ -323,13 +364,12 @@ namespace CryptoTrader.UserControls
                 }
 
                 // top traders long/short positions
-                List<LongShortRatioStick> lsrlines = klinesView.Children.OfType<LongShortRatioStick>().ToList();
-                List<LongShortRatioStick> ttlsRP = lsrlines.Where(lsr => lsr.Type == 1).ToList();
+                List<BarStick> ttlsRP = lsrlines.Where(lsr => lsr.Type == 2).ToList();
                 if (ttlsRP != null && ttlsRP.Count > 0)
                 {
                     double lowestLSR = ttlsRP.Min(o => o.Close);
                     double highestLSR = ttlsRP.Max(o => o.Close);
-                    foreach (LongShortRatioStick lsrline in ttlsRP)
+                    foreach (BarStick lsrline in ttlsRP)
                     {
                         lsrline.SetXPositions(viewWidth, firstKline, lastKline);
                         lsrline.SetYPositions(viewHeight, lowestLSR, highestLSR);
@@ -337,13 +377,13 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // gloabla account long/short rations
-                List<LongShortRatioStick> glsAR = lsrlines.Where(lsr => lsr.Type == 2).ToList();
+                // global long/short account ratio
+                List<BarStick> glsAR = lsrlines.Where(lsr => lsr.Type == 3).ToList();
                 if (glsAR != null && glsAR.Count > 0)
                 {
                     double lowestLSR = glsAR.Min(o => o.Close);
                     double highestLSR = glsAR.Max(o => o.Close);
-                    foreach (LongShortRatioStick lsrline in glsAR)
+                    foreach (BarStick lsrline in glsAR)
                     {
                         lsrline.SetXPositions(viewWidth, firstKline, lastKline);
                         lsrline.SetYPositions(viewHeight, lowestLSR, highestLSR);
@@ -373,19 +413,19 @@ namespace CryptoTrader.UserControls
                     sizes.Sort();
                     volumes.Sort();
 
-                    double size80 = sizes[(80 * klines.Count) / 100]; // show candles with size over 80%
-                    decimal volume80 = volumes[(80 * klines.Count) / 100]; // show candles with volume over 80%
+                    double size70 = sizes[(70 * klines.Count) / 100]; // show candles with size over 80%
+                    decimal volume70 = volumes[(70 * klines.Count) / 100]; // show candles with volume over 80%
 
                     CandleStick prevCs = klines[0];
                     foreach (CandleStick candleStick in klines)
                     {
-                        if (candleStick.High - candleStick.Low >= size80 && candleStick.OriginalKLine.BaseVolume >= volume80)
+                        if (candleStick.High - candleStick.Low >= size70 && candleStick.OriginalKLine.BaseVolume >= volume70)
                         {
                             candleStick.Fill((candleStick.High > prevCs.High || candleStick.Low > prevCs.Low) ? realGreenBrush : realRedBrush);
                             prevCs = candleStick;
                         }
                         else
-                            candleStick.Fill(Brushes.Black);
+                            candleStick.Fill(realGrayBrush);
                     }
                 }
 
@@ -512,21 +552,29 @@ namespace CryptoTrader.UserControls
             DrawKLines(); // when CandleType is changed (colors are changed)
         }
 
-        private void savemark_MouseDown(object sender, MouseButtonEventArgs e)
+        private void tools_MouseDown(object sender, MouseButtonEventArgs e)
         {
             e.Handled = true;
+            TextBlock tb = sender as TextBlock;
 
-            if(klinesView.Children.Count > 0)
+            if(tb.Tag.ToString() == "savemark" && klinesView.Children.Count > 0)
             {
                 TrendLineHelper.KeepTempTargetLines(klinesView);
                 TrendLineData.SaveToDisk(klinesView, Symbol, Interval); // when temp target lines are keep
                 MessageBox.Show("Target lines have been saved.", Application.ResourceAssembly.GetName().Name, MessageBoxButton.OK, MessageBoxImage.Information);              
             }
+
+            if (tb.Tag.ToString() == "longshort" && klinesView.Children.Count > 0)
+            {
+                tb.Visibility = Visibility.Collapsed;
+                livePriceData.LoadLongShortIndicators(Symbol, Interval, klinesView.Children.OfType<CandleStick>().Count());
+            }
         }
 
         private void klinesView_MouseLeave(object sender, MouseEventArgs e)
         {
-            cursorPrice.Text = "";
+            cursorPrice.Text = string.Empty;
+            cursorLine.Visibility = Visibility.Collapsed;
         }
 
         private void klinesView_MouseDown(object sender, MouseButtonEventArgs e)
