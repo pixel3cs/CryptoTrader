@@ -1,4 +1,5 @@
-﻿using CryptoTrader.UserControls;
+﻿using CryptoTrader.DataObjects;
+using CryptoTrader.UserControls;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -26,6 +27,12 @@ namespace CryptoTrader
 
             currentSymbolTb.Text = string.Format("Current Symbol: {0}", Utils.InitialSymbol);
 
+            // load tabs
+            List<JSONTab> tabsList = JSONTab.LoadFromDisk();
+            foreach (JSONTab jsonTab in tabsList)
+                AddAutoTradeTab(jsonTab);
+
+            // broadcast all prices
             AllPricesTickClient.PricesAvailableEvent += AllPricesTickClient_PricesAvailableEvent; // fired once per second
             AllPricesTickClient.StartBroadcastingAllNewPrices();
         }
@@ -111,16 +118,33 @@ namespace CryptoTrader
             }
 
             // create new tab
-            tab = new TabItem();
-            AutoTrade autoTrade = new AutoTrade();
-            autoTrade.SetControlsTradeData(tradeDataView.Symbol, showTargetLinesCB.IsChecked.Value, leverageTB.Value, targetROETb.Value);
+            JSONTab jsonTab = new JSONTab() { Symbol = tradeDataView.Symbol, ShowTargetLines = showTargetLinesCB.IsChecked.Value, Leverage = leverageTB.Value, TargetROE = targetROETb.Value };
+            tab = AddAutoTradeTab(jsonTab);
+            JSONTab.SaveToDisk(jsonTab);
 
-            tab.Header = tradeDataView.Symbol;
             tab.IsSelected = true;
+            Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = tab));
+        }
+
+        private TabItem AddAutoTradeTab(JSONTab jsonTab)
+        {
+            AutoTrade autoTrade = new AutoTrade();
+            autoTrade.CloseTabEvent += AutoTrade_CloseTabEvent;
+            autoTrade.SetControlsTradeData(jsonTab);
+
+            TabItem tab = new TabItem();
+            tab.Header = jsonTab.Symbol;
             tab.Content = autoTrade;
             tabControl.Items.Add(tab);
 
-            Dispatcher.BeginInvoke((Action)(() => tabControl.SelectedItem = tab));
+            return tab;
+        }
+
+        private void AutoTrade_CloseTabEvent(AutoTrade autoTrade)
+        {
+            TabItem tab = autoTrade.Parent as TabItem;
+            tabControl.Items.Remove(tab);
+            JSONTab.RemoveFromDisk(autoTrade.currentSymbolTb.Tag.ToString());
         }
 
         private void leverageTB_OnValueChangedEvent()

@@ -1,4 +1,5 @@
 ﻿using Binance.Net.Objects.Spot.MarketStream;
+using CryptoTrader.DataObjects;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -10,27 +11,33 @@ namespace CryptoTrader.UserControls
     {
         private int tradeCount;
         private BinanceStreamAggregatedTrade lastDisplayedTrade;
+        private JSONTab jsonTab;
+
+        public delegate void CloseTabDelegate(AutoTrade autoTrade);
+        public event CloseTabDelegate CloseTabEvent = null;
 
         public AutoTrade()
         {
             InitializeComponent();
         }
 
-        public void SetControlsTradeData(string symbol, bool showTargetLines, double leverage, double targetROE)
+        public void SetControlsTradeData(JSONTab jsonTab)
         {
-            leverageTB.Value = leverage;
-            targetROETb.Value = targetROE;
-            showTargetLinesCB.IsChecked = showTargetLines;
-            currentSymbolTb.Text = string.Format("Current Symbol: {0}", symbol);
+            this.jsonTab = jsonTab;
+            leverageTB.Value = jsonTab.Leverage;
+            targetROETb.Value = jsonTab.TargetROE;
+            showTargetLinesCB.IsChecked = jsonTab.ShowTargetLines;
+            currentSymbolTb.Text = string.Format("Current Symbol: {0}", jsonTab.Symbol);
+            currentSymbolTb.Tag = jsonTab.Symbol;
 
             int interval = 0;
             foreach (TradeDataView tdv in tradeDataViews.Children.OfType<TradeDataView>())
             {
-                tdv.SetTargetPrice(targetROETb.Value / leverageTB.Value, showTargetLines);
-                tdv.SwitchData(symbol, Utils.ViewIntervals[interval++], Utils.RequestType.DoNotLoad);
+                tdv.SetTargetPrice(targetROETb.Value / leverageTB.Value, jsonTab.ShowTargetLines);
+                tdv.SwitchData(jsonTab.Symbol, Utils.ViewIntervals[interval++], Utils.RequestType.DoNotLoad);
             }
 
-            BinanceTickClient.StartBroadcastingLastTickValue(symbol, LastTickValueHandler);
+            BinanceTickClient.StartBroadcastingLastTickValue(jsonTab.Symbol, LastTickValueHandler);
         }
 
         public void LastTickValueHandler(BinanceStreamAggregatedTrade trade)
@@ -98,5 +105,10 @@ namespace CryptoTrader.UserControls
             }
         }
 
+        private void closeTabButton_MouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            if (CloseTabEvent != null)
+                CloseTabEvent(this);
+        }
     }
 }

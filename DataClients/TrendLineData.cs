@@ -13,17 +13,20 @@ namespace CryptoTrader
         {
         }
 
-        private static void GetFolderAndPath(string symbol, string interval, out string folder, out string path)
+        private static string GetFilePath(string symbol, string interval)
         {
-            folder = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
+            string folder = Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location);
             folder = Path.Combine(folder, "TrendLines");
-            path = Path.Combine(folder, string.Format("{0}_{1}.txt", symbol, interval));
+            
+            if (Directory.Exists(folder) == false)
+                Directory.CreateDirectory(folder);
+
+            return Path.Combine(folder, string.Format("{0}_{1}.txt", symbol, interval));
         }
 
         public static List<TrendLine> LoadFromDisk(string symbol, string interval)
         {
-            string folder, path;
-            GetFolderAndPath(symbol, interval, out folder, out path);
+            string path = GetFilePath(symbol, interval);
 
             if (File.Exists(path) == false)
                 return new List<TrendLine>();
@@ -36,11 +39,7 @@ namespace CryptoTrader
 
         public static void SaveToDisk(Canvas klinesView, string symbol, string interval)
         {
-            string folder, path;
-            GetFolderAndPath(symbol, interval, out folder, out path);
-
-            if (Directory.Exists(folder) == false)
-                Directory.CreateDirectory(folder);
+            string path = GetFilePath(symbol, interval);
 
             List<TrendLine> tlList = klinesView.Children.OfType<TrendLineStick>().Where(tls => tls.OriginalTrendLine.ForSaving).Select(tls => tls.OriginalTrendLine).ToList();
             string text = JsonConvert.SerializeObject(tlList);

@@ -146,6 +146,7 @@
     <Compile Include="DataClients\AllPricesTickClient.cs" />
     <Compile Include="DataObjects\BinanceKLine.cs" />
     <Compile Include="DataClients\BinanceTickClient.cs" />
+    <Compile Include="DataObjects\JSONTab.cs" />
     <Compile Include="Helpers\TradeHelper.cs" />
     <Compile Include="DataObjects\Transaction.cs" />
     <Compile Include="DataObjects\LivePrice.cs" />

@@ -24,6 +24,8 @@
 
         <Grid Margin="0,2,0,0">
 
+            <TextBlock x:Name="closeTabButton" Text="Close tab" MouseDown="closeTabButton_MouseDown" Margin="5" HorizontalAlignment="Right" VerticalAlignment="Top" Style="{StaticResource ResourceKey=TextButtonStyle}"/>
+
             <StackPanel Orientation="Vertical" VerticalAlignment="Top">
                 <StackPanel Orientation="Horizontal">
                     <TextBlock Text="Last Value: " Style="{StaticResource ResourceKey=TBStyle}"/>
