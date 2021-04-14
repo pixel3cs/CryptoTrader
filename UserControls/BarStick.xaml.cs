@@ -15,7 +15,7 @@ namespace CryptoTrader.UserControls
         public DateTime OpenTime { get; private set; }
         public DateTime CloseTime { get; private set; }
 
-        public bool Up { get { return Close >= Open; } }
+        public bool Up { get { return Close >= 0; } }
         public int Type;
 
         private BarStick()
@@ -43,7 +43,7 @@ namespace CryptoTrader.UserControls
 
         public void SetYPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)
         {
-            //viewHeight = viewHeight / 3;
+            viewHeight = viewHeight / 3;
             double high = Math.Max(Open, Close);
             double low = Math.Min(Open, Close);
             double Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, high);

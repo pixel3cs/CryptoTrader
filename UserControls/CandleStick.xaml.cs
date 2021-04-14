@@ -1,4 +1,5 @@
 ﻿using Binance.Net.Interfaces;
+using Skender.Stock.Indicators;
 using System;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,7 +7,7 @@ using System.Windows.Media;
 
 namespace CryptoTrader.UserControls
 {
-    public partial class CandleStick : UserControl
+    public partial class CandleStick : UserControl, Skender.Stock.Indicators.IQuote
     {
         public IBinanceKline OriginalKLine { get; private set; }
         public double Low { get { return (double)OriginalKLine.Low; } }
@@ -15,6 +16,13 @@ namespace CryptoTrader.UserControls
         public double Close { get { return (double)OriginalKLine.Close; } }
         public bool Up { get { return this.Close >= this.Open; } }
         public bool Down { get { return this.Close < this.Open; } }
+
+        public DateTime Date => OriginalKLine.CloseTime;
+        decimal IQuote.Open => OriginalKLine.Open;
+        decimal IQuote.High => OriginalKLine.High;
+        decimal IQuote.Low => OriginalKLine.Low;
+        decimal IQuote.Close => OriginalKLine.Close;
+        public decimal Volume => OriginalKLine.BaseVolume;
 
         private CandleStick()
         {

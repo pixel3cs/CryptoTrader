@@ -63,19 +63,24 @@ namespace CryptoTrader
             };
         }
 
-        public static void UpdateTempTargetLines(Canvas klinesView, double targetMovePercent, bool showTargetLines)
+        public static void UpdateTempTargetLines(Canvas klinesView, double targetMovePercent, bool showTargetLines, double closePrice, CandleStick firstKline, CandleStick lastKline, double lowestLowPrice, double highestHighPrice)
         {
-            double closePrice = (double)klinesView.Children.OfType<CandleStick>().Last().OriginalKLine.Close;
             double targetPrice = (targetMovePercent / 100d) * closePrice;
             
             TrendLineStick tlLong = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetLong.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlLong.OriginalTrendLine.StartPrice = tlLong.OriginalTrendLine.EndPrice = closePrice + targetPrice;
+            tlLong.SetXPositions(klinesView.ActualWidth, firstKline, lastKline);
+            tlLong.SetYPositions(klinesView.ActualHeight, lowestLowPrice, highestHighPrice);
 
             TrendLineStick tlCurrent = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetCurrent.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlCurrent.OriginalTrendLine.StartPrice = tlCurrent.OriginalTrendLine.EndPrice = closePrice;
+            tlCurrent.SetXPositions(klinesView.ActualWidth, firstKline, lastKline);
+            tlCurrent.SetYPositions(klinesView.ActualHeight, lowestLowPrice, highestHighPrice);
 
             TrendLineStick tlShort = klinesView.Children.OfType<TrendLineStick>().FirstOrDefault(tl => tl.OriginalTrendLine.LineType == TrendLineType.TargetShort.ToString() && tl.OriginalTrendLine.ForSaving == false);
             tlShort.OriginalTrendLine.StartPrice = tlShort.OriginalTrendLine.EndPrice = closePrice - targetPrice;
+            tlShort.SetXPositions(klinesView.ActualWidth, firstKline, lastKline);
+            tlShort.SetYPositions(klinesView.ActualHeight, lowestLowPrice, highestHighPrice);
 
             tlLong.Visibility = tlCurrent.Visibility = tlShort.Visibility = showTargetLines ? Visibility.Visible : Visibility.Hidden;
         }

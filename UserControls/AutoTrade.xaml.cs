@@ -11,7 +11,6 @@ namespace CryptoTrader.UserControls
     {
         private int tradeCount;
         private BinanceStreamAggregatedTrade lastDisplayedTrade;
-        private JSONTab jsonTab;
 
         public delegate void CloseTabDelegate(AutoTrade autoTrade);
         public event CloseTabDelegate CloseTabEvent = null;
@@ -23,7 +22,6 @@ namespace CryptoTrader.UserControls
 
         public void SetControlsTradeData(JSONTab jsonTab)
         {
-            this.jsonTab = jsonTab;
             leverageTB.Value = jsonTab.Leverage;
             targetROETb.Value = jsonTab.TargetROE;
             showTargetLinesCB.IsChecked = jsonTab.ShowTargetLines;

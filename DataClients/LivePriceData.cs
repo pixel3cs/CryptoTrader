@@ -95,14 +95,14 @@ namespace CryptoTrader
                 //var openInterestResponse = klinesClient.FuturesUsdt.Market.GetOpenInterestHistory(symbol, periodInerval.Value, limit);
                 //MainWindow.UpdateWeightUsage(openInterestResponse.ResponseHeaders);
 
+                //var glsAccountRatioResponse = klinesClient.FuturesUsdt.Market.GetGlobalLongShortAccountRatio(symbol, periodInerval.Value, limit, null, null);
+                //MainWindow.UpdateWeightUsage(glsAccountRatioResponse.ResponseHeaders);
+
                 var ttlsRatioPositionsResponse = klinesClient.FuturesUsdt.Market.GetTopLongShortPositionRatio(symbol, periodInerval.Value, limit, null, null);
                 MainWindow.UpdateWeightUsage(ttlsRatioPositionsResponse.ResponseHeaders);
 
-                var glsAccountRatioResponse = klinesClient.FuturesUsdt.Market.GetGlobalLongShortAccountRatio(symbol, periodInerval.Value, limit, null, null);
-                MainWindow.UpdateWeightUsage(glsAccountRatioResponse.ResponseHeaders);
-
-                if (/*openInterestResponse.Success && */ttlsRatioPositionsResponse.Success && glsAccountRatioResponse.Success)
-                    serverDataLongShortHandler(null, ttlsRatioPositionsResponse.Data, glsAccountRatioResponse.Data);
+                if (ttlsRatioPositionsResponse.Success)
+                    serverDataLongShortHandler(ttlsRatioPositionsResponse.Data);
             }
         }
 
