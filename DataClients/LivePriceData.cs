@@ -63,7 +63,7 @@ namespace CryptoTrader
                 if (klinesClient == null)
                     klinesClient = new BinanceClient();
 
-                var klinesResponse = klinesClient.FuturesUsdt.Market.GetKlines(symbol, klineInterval);
+                var klinesResponse = klinesClient.FuturesUsdt.Market.GetKlines(symbol, klineInterval, null, null, 1000);
                 MainWindow.UpdateWeightUsage(klinesResponse.ResponseHeaders);
                 
                 if (klinesResponse != null && klinesResponse.Success)

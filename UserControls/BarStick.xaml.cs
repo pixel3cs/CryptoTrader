@@ -43,7 +43,7 @@ namespace CryptoTrader.UserControls
 
         public void SetYPositions(double viewHeight, double lowestLowPrice, double highestHighPrice)
         {
-            viewHeight = viewHeight / 3;
+            //viewHeight = viewHeight / 3;
             double high = Math.Max(Open, Close);
             double low = Math.Min(Open, Close);
             double Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestLowPrice, highestHighPrice, high);

@@ -339,30 +339,43 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // MACD
-                //if (klines.Count > 200)
-                //{
-                //    IEnumerable<Skender.Stock.Indicators.MacdResult> macdResults = Skender.Stock.Indicators.Indicator.GetMacd(klines);
-                //    Skender.Stock.Indicators.MacdResult prev = macdResults.First();
-                //    foreach (Skender.Stock.Indicators.MacdResult macdResult in macdResults)
-                //    {
-                //        BarStick bs = new BarStick(macdResult.Histogram.HasValue ? (double)macdResult.Histogram : 0, macdResult.Date, prev.Histogram.HasValue ? (double)prev.Histogram : 0, prev.Date, 0);
-                //        klinesView.Children.Add(bs);
-                //        prev = macdResult;
-                //    }
-                //    List<BarStick> macdHistList = klinesView.Children.OfType<BarStick>().Where(bs => bs.Type == 0).ToList();
-                //    if (macdHistList != null && macdHistList.Count > 0)
-                //    {
-                //        double lowestBS = macdHistList.Min(o => o.Close);
-                //        double highestBS = macdHistList.Max(o => o.Close);
-                //        foreach (BarStick bs in macdHistList)
-                //        {
-                //            bs.SetXPositions(viewWidth, firstKline, lastKline);
-                //            bs.SetYPositions(viewHeight, lowestBS, highestBS);
-                //            bs.Fill(green2Brush, red2Brush);
-                //        }
-                //    }
-                //}
+                // moving average
+                Path path = klinesView.Children.OfType<Path>().Where(p => p.Tag.ToString() == "MA").FirstOrDefault();
+                if (path != null)
+                    klinesView.Children.Remove(path);
+
+                PointCollection points = new PointCollection();
+                int iminutes = -15 * Utils.IntervalInMinutes(Interval);
+                IEnumerable<Skender.Stock.Indicators.SmaResult> smaResults = Skender.Stock.Indicators.Indicator.GetSma(klines, 50);
+
+                double lowestBS = (double)smaResults.Where(o => o.Sma > 0).Min(o => o.Sma);
+                double highestBS = (double)smaResults.Max(o => o.Sma);
+                foreach (Skender.Stock.Indicators.SmaResult smaResult in smaResults)
+                    if (smaResult.Sma.HasValue && smaResult.Sma.Value > 0)
+                    {
+                        double X1 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, smaResult.Date.AddMinutes(iminutes).Ticks);
+                        double Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestBS, highestBS, (double)smaResult.Sma.Value);
+                        points.Add(new Point(X1, Y1));
+                    }
+
+                path = new Path();
+                path.Tag = "MA";
+                path.Stroke = System.Windows.Media.Brushes.Green;
+                path.StrokeThickness = 4;
+
+                PolyLineSegment pls = new PolyLineSegment(points, true);
+                pls.Freeze();
+                PathFigure pf = new PathFigure();
+                pf.StartPoint = points.First();
+                pf.Segments.Add(pls);
+                pf.Freeze();
+
+                PathGeometry pg = new PathGeometry();
+                pg.Figures.Add(pf);
+                pg.Freeze();
+
+                path.Data = pg;
+                klinesView.Children.Add(path);
 
                 // display parameters
                 udCandleType.ToolTip = string.Format("{0:0.00} %", reversal);
@@ -391,6 +404,9 @@ namespace CryptoTrader.UserControls
                     isDrawing = false;
                     return;
                 }
+
+                //klinesView.Children.OfType<UIElement>().All(ui => { ui.Visibility = Visibility.Hidden; return true; });
+                //klinesView.Children.OfType<TrendLineStick>().All(ui => { ui.Visibility = Visibility.Visible; return true; });
 
                 List<CandleStick> klines = klinesView.Children.OfType<CandleStick>().ToList();
 
@@ -466,6 +482,7 @@ namespace CryptoTrader.UserControls
                 if(CandleType == "TA")
                 {
                     List<TrendLineStick> tlines = klinesView.Children.OfType<TrendLineStick>().ToList();
+
                     foreach (CandleStick candleStick in klines)
                     {
                         double csX = Canvas.GetLeft(candleStick);
@@ -520,6 +537,14 @@ namespace CryptoTrader.UserControls
                             candleStick.Fill(candleStick.Up ? greenBrush : redBrush);
                     }
                 }
+
+                // MA
+                if (CandleType == "MA")
+                {
+                    Path path = klinesView.Children.OfType<Path>().Where(p => p.Tag.ToString() == "MA").FirstOrDefault();
+                    path.Visibility = Visibility.Visible;
+                }
+
             }            
 
             TimeSpan drawingTS = DateTime.Now - startDrawingTime;
@@ -565,7 +590,7 @@ namespace CryptoTrader.UserControls
             if (tb.Tag.ToString() == "longshort" && klinesView.Children.Count > 0)
             {
                 tb.Visibility = Visibility.Collapsed;
-                livePriceData.LoadLongShortIndicators(Symbol, Interval, klinesView.Children.OfType<CandleStick>().Count());
+                livePriceData.LoadLongShortIndicators(Symbol, Interval, 500);
             }
         }
 
@@ -715,30 +740,38 @@ namespace CryptoTrader.UserControls
             e.Handled = true;
 
             // toggle size (full screen / normal size)
-            Grid parentGrid = this.Parent as Grid;
+            Grid parentGrid = this.Parent as Grid;            
 
             if (maximized)
             {
+                maximized = false;
+                this.Visibility = Visibility.Hidden;
+
                 Grid.SetRow(this, row);
                 Grid.SetColumn(this, column);
                 Grid.SetRowSpan(this, 1);
                 Grid.SetColumnSpan(this, 1);
-                Grid.SetZIndex(this, 0);
-                maximized = false;
+
+                setRenderTransform(Matrix.Identity, true);
+                parentGrid.Children.OfType<UIElement>().All(ui => { ui.Visibility = Visibility.Visible; return true; });                
             }
             else
             {
+                maximized = true;
+                parentGrid.Children.OfType<UIElement>().All(ui => { ui.Visibility = Visibility.Hidden; return true; });
+
                 row = Grid.GetRow(this);
                 column = Grid.GetColumn(this);
                 Grid.SetRow(this, 0);
                 Grid.SetColumn(this, 0);
                 Grid.SetRowSpan(this, parentGrid.RowDefinitions.Count);
                 Grid.SetColumnSpan(this, parentGrid.ColumnDefinitions.Count);
-                Grid.SetZIndex(this, 1);
-                maximized = true;
+
+                setRenderTransform(Matrix.Identity, true);
+                this.Visibility = Visibility.Visible;
             }
 
-            setRenderTransform(Matrix.Identity, true);
+            
         }
 
         public void SafelyClose()

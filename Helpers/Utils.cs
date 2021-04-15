@@ -46,6 +46,14 @@ namespace CryptoTrader
             TargetShort
         }
 
+        public enum ShapeType
+        {
+            CandleStick,
+            TrendLine,
+            BarStick,
+            Path
+        }
+
         public static double CalculateViewWidth(double viewWidth, double lowestLeftX, double highestRightX, double xPosition)
         {
             if (highestRightX == lowestLeftX) return 0;
