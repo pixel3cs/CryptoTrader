@@ -86,10 +86,11 @@ namespace CryptoTrader.UserControls
             //lastC = this;
         }
 
-        public void Fill(Brush brush)
+        public void Fill(Brush brush, bool hideWick = false)
         {
             body.Fill = brush;
             line.Fill = brush;
+            line.Visibility = hideWick ? Visibility.Hidden : Visibility.Visible;
         }
 
     }

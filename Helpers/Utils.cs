@@ -54,10 +54,12 @@ namespace CryptoTrader
             Path
         }
 
+        public static int startindex = 0;
         public static double CalculateViewWidth(double viewWidth, double lowestLeftX, double highestRightX, double xPosition)
         {
             if (highestRightX == lowestLeftX) return 0;
-            return ((xPosition - lowestLeftX) * viewWidth) / (highestRightX - lowestLeftX);
+            viewWidth = viewWidth - startindex;
+            return startindex + ((xPosition - lowestLeftX) * viewWidth) / (highestRightX - lowestLeftX);
         }
 
         public static double CalculateViewHeight(double viewHeight, double lowestPrice, double highestPrice, double price)

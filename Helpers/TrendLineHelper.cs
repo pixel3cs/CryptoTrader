@@ -23,7 +23,7 @@ namespace CryptoTrader
             double closePrice = (double)lastKline.Close;
             DateTime closeTime = lastKline.CloseTime;
             double targetPrice = (targetMovePercent / 100d) * closePrice;
-            double mleft = -20, mright = 50;
+            double mleft = -5, mright = 50;
 
             TrendLine longTrendLine = new TrendLine()
             {

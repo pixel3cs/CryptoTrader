@@ -24,7 +24,7 @@ namespace CryptoTrader.UserControls
         public static readonly Brush alteredBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FFFFFF"));
         public static readonly Brush realRedBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#FF0000"));
         public static readonly Brush realGreenBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#00FF00"));
-        public static readonly Brush realGrayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#373737"));
+        public static readonly Brush realGrayBrush = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#777777"));
 
         protected object viewControlsLock = new object();
         protected bool isDrawing = false;
@@ -337,45 +337,7 @@ namespace CryptoTrader.UserControls
                         lsrline.SetYPositions(viewHeight, lowestLSR, highestLSR);
                         lsrline.Fill(green2Brush, green2Brush);
                     }
-                }
-
-                // moving average
-                Path path = klinesView.Children.OfType<Path>().Where(p => p.Tag.ToString() == "MA").FirstOrDefault();
-                if (path != null)
-                    klinesView.Children.Remove(path);
-
-                PointCollection points = new PointCollection();
-                int iminutes = -15 * Utils.IntervalInMinutes(Interval);
-                IEnumerable<Skender.Stock.Indicators.SmaResult> smaResults = Skender.Stock.Indicators.Indicator.GetSma(klines, 50);
-
-                double lowestBS = (double)smaResults.Where(o => o.Sma > 0).Min(o => o.Sma);
-                double highestBS = (double)smaResults.Max(o => o.Sma);
-                foreach (Skender.Stock.Indicators.SmaResult smaResult in smaResults)
-                    if (smaResult.Sma.HasValue && smaResult.Sma.Value > 0)
-                    {
-                        double X1 = Utils.CalculateViewWidth(viewWidth, firstKline.OriginalKLine.OpenTime.Ticks, lastKline.OriginalKLine.CloseTime.Ticks, smaResult.Date.AddMinutes(iminutes).Ticks);
-                        double Y1 = viewHeight - Utils.CalculateViewHeight(viewHeight, lowestBS, highestBS, (double)smaResult.Sma.Value);
-                        points.Add(new Point(X1, Y1));
-                    }
-
-                path = new Path();
-                path.Tag = "MA";
-                path.Stroke = System.Windows.Media.Brushes.Green;
-                path.StrokeThickness = 4;
-
-                PolyLineSegment pls = new PolyLineSegment(points, true);
-                pls.Freeze();
-                PathFigure pf = new PathFigure();
-                pf.StartPoint = points.First();
-                pf.Segments.Add(pls);
-                pf.Freeze();
-
-                PathGeometry pg = new PathGeometry();
-                pg.Figures.Add(pf);
-                pg.Freeze();
-
-                path.Data = pg;
-                klinesView.Children.Add(path);
+                }               
 
                 // display parameters
                 udCandleType.ToolTip = string.Format("{0:0.00} %", reversal);
@@ -404,9 +366,6 @@ namespace CryptoTrader.UserControls
                     isDrawing = false;
                     return;
                 }
-
-                //klinesView.Children.OfType<UIElement>().All(ui => { ui.Visibility = Visibility.Hidden; return true; });
-                //klinesView.Children.OfType<TrendLineStick>().All(ui => { ui.Visibility = Visibility.Visible; return true; });
 
                 List<CandleStick> klines = klinesView.Children.OfType<CandleStick>().ToList();
 
@@ -439,12 +398,10 @@ namespace CryptoTrader.UserControls
                     foreach (CandleStick candleStick in klines)
                     {
                         if (candleStick.High - candleStick.Low >= size70 && candleStick.OriginalKLine.BaseVolume >= volume70)
-                        {
-                            candleStick.Fill((candleStick.High > prevCs.High || candleStick.Low > prevCs.Low) ? realGreenBrush : realRedBrush);
-                            prevCs = candleStick;
-                        }
+                            candleStick.Fill(candleStick.Up ? realGreenBrush : realRedBrush);
                         else
                             candleStick.Fill(realGrayBrush);
+                        prevCs = candleStick;
                     }
                 }
 
@@ -479,6 +436,7 @@ namespace CryptoTrader.UserControls
                     //profitTB.Text = string.Format("{0:0.00} %", simulation.SwingProfitPercent);
                 }
 
+                // technical analysis with trend lines
                 if(CandleType == "TA")
                 {
                     List<TrendLineStick> tlines = klinesView.Children.OfType<TrendLineStick>().ToList();
@@ -538,13 +496,14 @@ namespace CryptoTrader.UserControls
                     }
                 }
 
-                // MA
-                if (CandleType == "MA")
+                // gray, without wick
+                if (CandleType == "GRY")
                 {
-                    Path path = klinesView.Children.OfType<Path>().Where(p => p.Tag.ToString() == "MA").FirstOrDefault();
-                    path.Visibility = Visibility.Visible;
+                    foreach (CandleStick candleStick in klines)
+                    {
+                        candleStick.Fill(grayBrush, true);
+                    }
                 }
-
             }            
 
             TimeSpan drawingTS = DateTime.Now - startDrawingTime;
@@ -706,6 +665,10 @@ namespace CryptoTrader.UserControls
 
         private void klinesView_MouseWheel(object sender, MouseWheelEventArgs e)
         {
+            //Utils.startindex -= e.Delta;
+            //RenderPositions();
+            //return;
+
             Point klinesViewPosition = Mouse.GetPosition(klinesView);
             klinesViewPosition = klinesView.RenderTransform.Transform(klinesViewPosition);
 

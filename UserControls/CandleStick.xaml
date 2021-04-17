@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:CryptoTrader.UserControls"
              mc:Ignorable="d" d:DesignHeight="100" d:DesignWidth="50">
     <Grid x:Name="mainGrid">
-        <Rectangle x:Name="line" Width="0.7"/>
+        <Rectangle x:Name="line" Width="0.7" />
         <Rectangle x:Name="body" VerticalAlignment="Top" />
     </Grid>
 </UserControl>
